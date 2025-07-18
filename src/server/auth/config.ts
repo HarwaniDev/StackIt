@@ -1,8 +1,7 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
-
+import GoogleProvider from "next-auth/providers/google";
 import { db } from "@/server/db";
+import { UserRole } from "@prisma/client";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -14,15 +13,17 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      role: UserRole;
     } & DefaultSession["user"];
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    role: UserRole;
+  }
+
+  interface JWT {
+    role: UserRole;
+  }
 }
 
 /**
@@ -32,25 +33,50 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
-    DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
-  ],
-  adapter: PrismaAdapter(db),
-  callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+  ],
+  session: {
+    strategy: "jwt", // Use JWT strategy instead of database sessions,
+    maxAge: 30 * 24 * 60 * 60
+  },
+  callbacks: {
+    signIn: async ({ user, account, profile }) => {
+      // Handle new user registration
+      if (account?.provider === "google") {
+        try {
+          // Check if user exists
+          const existingUser = await db.user.findUnique({
+            where: { email: user.email! },
+          });
+
+          if (!existingUser) {
+            // Create new user with default role
+            await db.user.create({
+              data: {
+                email: user.email!,
+                name: user.name,
+                image: user.image,
+                role: UserRole.USER, // Default role for new users
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Error during sign in:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    session: ({ session, token }) => {
+      // Add id and role to session from JWT token
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+        session.user.role = token.role as unknown as UserRole;
+      }
+      return session;
+    },
   },
 } satisfies NextAuthConfig;
