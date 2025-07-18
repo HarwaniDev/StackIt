@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url      = env("DATABASE_URL")
+}
+
+// This is your Prisma schema file for StackIt Q&A Platform
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+enum UserRole {
+  GUEST
+  USER
+  ADMIN
+}
+
+enum NotificationType {
+  ANSWER_POSTED
+  COMMENT_POSTED
+  MENTION
+  ANSWER_ACCEPTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      UserRole @default(USER)
+  avatar    String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  questions     Question[]
+  answers       Answer[]
+  votes         Vote[]
+  comments      Comment[]
+  notifications Notification[]
+
+  // Self-referential relations for mentions
+  mentionedBy User[] @relation("UserMentions")
+  mentions    User[] @relation("UserMentions")
+
+  @@map("users")
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  slug        String   @unique
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign keys
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Relations
+  answers      Answer[]
+  votes        Vote[]
+  tags         QuestionTag[]
+  comments     Comment[]
+  notifications Notification[]
+
+  @@map("questions")
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  content    String   @db.Text
+  isAccepted Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Foreign keys
+  authorId   String
+  questionId String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  // Relations
+  votes         Vote[]
+  comments      Comment[]
+  notifications Notification[]
+
+  @@map("answers")
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?  @default("#3B82F6")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  questions QuestionTag[]
+
+  @@map("tags")
+}
+
+model QuestionTag {
+  id String @id @default(cuid())
+
+  // Foreign keys
+  questionId String
+  tagId      String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, tagId])
+  @@map("question_tags")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  value     Int      // 1 for upvote, -1 for downvote
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign keys
+  userId     String
+  questionId String?
+  answerId   String?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     Answer?   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  // Ensure user can only vote once per question/answer
+  @@unique([userId, questionId])
+  @@unique([userId, answerId])
+  @@map("votes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign keys
+  authorId   String
+  questionId String?
+  answerId   String?
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     Answer?   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  // Relations
+  notifications Notification[]
+
+  @@map("comments")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Foreign keys
+  userId     String
+  questionId String?
+  answerId   String?
+  commentId  String?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     Answer?   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  comment    Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
