@@ -9,6 +9,7 @@ import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
+import Header from "@/components/Header";
 
 const mockUserData = {
   name: "John Doe",
@@ -88,61 +89,11 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-2xl font-bold text-white hover:text-blue-100">
-                StackIt
-              </Link>
-              <nav className="hidden md:flex items-center gap-4">
-                <Link href="/" className="text-sm font-medium text-blue-100 hover:text-white">
-                  Home
-                </Link>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20">
-                    <Bell className="h-5 w-5" />
-                    {notificationCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-red-500 text-white">
-                        {notificationCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium text-black">New answer on your question</p>
-                      <p className="text-xs text-gray-600">Someone answered "How to join 2 columns..."</p>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                    <Avatar className="h-8 w-8 ring-2 ring-white/30">
-                      <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                      <AvatarFallback className="bg-orange-500 text-white">JD</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">
-                    <Link href="/profile">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        session={null}
+        notificationCount={notificationCount}
+        onSignIn={() => {}}
+      />
 
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">

@@ -4,186 +4,250 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Bell, X } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { ChevronUp, ChevronDown, Bell, Check } from "lucide-react"
 import Link from "next/link"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import RichTextEditor from "@/components/rich-text-editor"
+import Header from "@/components/Header";
+import { signIn, useSession } from "next-auth/react";
 
-export default function AskQuestionPage() {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState("")
+const mockQuestion = {
+  id: 1,
+  title: "How to join 2 columns in a data set to make a separate column in SQL",
+  description:
+    "I do not know the code for it as I am a beginner. As an example what I need to do is like there is a column 1 containing First name, and column 2 consists of last name I want a column to combine both first name and last name.",
+  tags: ["SQL", "Database"],
+  votes: 5,
+  username: "User Name",
+  timeAgo: "2 hours ago",
+  isOwner: true,
+}
+
+const mockAnswers = [
+  {
+    id: 1,
+    content:
+      "You can use the CONCAT function or the || operator to join columns:\n\n```sql\nSELECT CONCAT(first_name, ' ', last_name) AS full_name\nFROM your_table;\n```\n\nOr using the || operator:\n\n```sql\nSELECT first_name || ' ' || last_name AS full_name\nFROM your_table;\n```",
+    votes: 8,
+    username: "SQLExpert",
+    timeAgo: "1 hour ago",
+    isAccepted: true,
+  },
+  {
+    id: 2,
+    content:
+      "Another approach is to use the CONCAT_WS function which handles NULL values better:\n\n```sql\nSELECT CONCAT_WS(' ', first_name, last_name) AS full_name\nFROM your_table;\n```",
+    votes: 3,
+    username: "DatabasePro",
+    timeAgo: "30 minutes ago",
+    isAccepted: false,
+  },
+]
+
+export default function QuestionDetailPage() {
+  const [answerContent, setAnswerContent] = useState("")
   const [notificationCount] = useState(3)
+  const [userVotes, setUserVotes] = useState<{ [key: string]: "up" | "down" | null }>({})
+  const session = useSession();
 
-  const addTag = (tag: string) => {
-    if (tag.trim() && !tags.includes(tag.trim())) {
-      setTags([...tags, tag.trim()])
-      setTagInput("")
+  const handleVote = (answerId: number, voteType: "up" | "down") => {
+    const currentVote = userVotes[answerId]
+    if (currentVote === voteType) {
+      // Remove vote if clicking the same vote
+      setUserVotes((prev) => ({ ...prev, [answerId]: null }))
+    } else {
+      // Set new vote
+      setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove))
+  const handleAcceptAnswer = (answerId: number) => {
+    // Handle accepting answer
+    console.log("Accept answer:", answerId)
   }
 
-  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault()
-      addTag(tagInput)
-    }
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitAnswer = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log({ title, description, tags })
+    // Handle answer submission
+    console.log("Submit answer:", answerContent)
+    setAnswerContent("")
+  }
+
+  // Enhanced syntax highlighting for code blocks
+  const renderAnswerContent = (content: string) => {
+    let html = content
+
+    // SQL syntax highlighting
+    html = html.replace(/```sql\n([\s\S]*?)```/g, (match, code) => {
+      let highlightedCode = code
+      // SQL keywords
+      highlightedCode = highlightedCode.replace(
+        /\b(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|OUTER|ON|GROUP BY|ORDER BY|HAVING|UNION|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TABLE|DATABASE|INDEX|CONCAT|CONCAT_WS|AS)\b/gi,
+        '<span class="text-blue-600 font-semibold">$1</span>',
+      )
+      // String literals
+      highlightedCode = highlightedCode.replace(/'([^']*)'/g, "<span class=\"text-green-600\">'$1'</span>")
+      // Comments
+      highlightedCode = highlightedCode.replace(/--.*$/gm, '<span class="text-gray-500 italic">$&</span>')
+
+      return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${highlightedCode}</code></pre>`
+    })
+
+    // Generic code blocks
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+      return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${code.trim()}</code></pre>`
+    })
+
+    // Inline code
+    html = html.replace(
+      /`([^`]+)`/g,
+      '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-black">$1</code>',
+    )
+
+    // Line breaks
+    html = html.replace(/\n/g, "<br>")
+
+    return html
   }
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-2xl font-bold text-white hover:text-blue-100">
-                StackIt
-              </Link>
-              <nav className="hidden md:flex items-center gap-4">
-                <Link href="/" className="text-sm font-medium text-blue-100 hover:text-white">
-                  Home
-                </Link>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20">
-                    <Bell className="h-5 w-5" />
-                    {notificationCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-red-500 text-white">
-                        {notificationCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium text-black">New answer on your question</p>
-                      <p className="text-xs text-gray-600">Someone answered "How to join 2 columns..."</p>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                    <Avatar className="h-8 w-8 ring-2 ring-white/30">
-                      <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                      <AvatarFallback className="bg-orange-500 text-white">UN</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">
-                    <Link href="/profile">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        session={session.data}
+        notificationCount={notificationCount}
+        onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/question/1" })}
+      />
 
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-white">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50">
-              <CardTitle className="text-2xl text-gray-800">Ask a Question</CardTitle>
-            </CardHeader>
-            <CardContent className="bg-white">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Title */}
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-black">
-                    Title
-                  </Label>
-                  <Input
-                    id="title"
-                    placeholder="Be specific and imagine you're asking a question to another person"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </div>
+          {/* Breadcrumb */}
+          <nav className="mb-6 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-primary">
+              Questions
+            </Link>
+            <span className="mx-2">{">"}</span>
+            <span>How to join 2...</span>
+          </nav>
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-black">
-                    Description
-                  </Label>
-                  <RichTextEditor
-                    value={description}
-                    onChange={setDescription}
-                    placeholder="Include all the information someone would need to answer your question"
-                  />
-                </div>
+          {/* Question */}
+          <Card className="mb-8 bg-white">
+            <CardContent className="p-6 bg-white">
+              <h1 className="text-2xl font-bold mb-4 text-black">{mockQuestion.title}</h1>
 
-                {/* Tags */}
-                <div className="space-y-2">
-                  <Label htmlFor="tags" className="text-black">
-                    Tags
-                  </Label>
-                  <div className="space-y-2">
-                    <Input
-                      id="tags"
-                      placeholder="Add tags (press Enter or comma to add)"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={handleTagInputKeyDown}
-                      onBlur={() => addTag(tagInput)}
-                    />
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {tags.map((tag, index) => (
-                          <Badge
-                            key={tag}
-                            className={`flex items-center gap-1 text-white ${
-                              index % 4 === 0
-                                ? "bg-purple-500"
-                                : index % 4 === 1
-                                  ? "bg-blue-500"
-                                  : index % 4 === 2
-                                    ? "bg-green-500"
-                                    : "bg-orange-500"
-                            }`}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {mockQuestion.tags.map((tag, index) => (
+                  <Badge
+                    key={tag}
+                    className={`text-white ${
+                      index % 4 === 0
+                        ? "bg-purple-500"
+                        : index % 4 === 1
+                          ? "bg-blue-500"
+                          : index % 4 === 2
+                            ? "bg-green-500"
+                            : "bg-orange-500"
+                    }`}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+
+              <div className="prose max-w-none mb-6">
+                <p className="text-gray-700">{mockQuestion.description}</p>
+              </div>
+
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>asked by {mockQuestion.username}</span>
+                <span>{mockQuestion.timeAgo}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Answers */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 text-black">Answers ({mockAnswers.length})</h2>
+
+            <div className="space-y-6">
+              {mockAnswers.map((answer) => (
+                <Card key={answer.id} className={answer.isAccepted ? "border-green-500 bg-white" : "bg-white"}>
+                  <CardContent className="p-6 bg-white">
+                    <div className="flex gap-4">
+                      {/* Vote Controls */}
+                      <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleVote(answer.id, "up")}
+                          className={`hover:bg-green-100 ${userVotes[answer.id] === "up" ? "text-green-600 bg-green-100" : "text-gray-500"}`}
+                        >
+                          <ChevronUp className="h-5 w-5" />
+                        </Button>
+                        <span className="text-lg font-semibold text-blue-600 bg-blue-50 rounded-full w-10 h-10 flex items-center justify-center">
+                          {answer.votes}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleVote(answer.id, "down")}
+                          className={`hover:bg-red-100 ${userVotes[answer.id] === "down" ? "text-red-600 bg-red-100" : "text-gray-500"}`}
+                        >
+                          <ChevronDown className="h-5 w-5" />
+                        </Button>
+                        {mockQuestion.isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleAcceptAnswer(answer.id)}
+                            className={`hover:bg-green-100 ${answer.isAccepted ? "text-green-600 bg-green-100" : "text-gray-500"}`}
                           >
-                            {tag}
-                            <X className="h-3 w-3 cursor-pointer hover:text-red-200" onClick={() => removeTag(tag)} />
-                          </Badge>
-                        ))}
+                            <Check className="h-5 w-5" />
+                          </Button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Submit Button */}
+                      {/* Answer Content */}
+                      <div className="flex-1">
+                        <div
+                          className="prose max-w-none mb-4"
+                          dangerouslySetInnerHTML={{ __html: renderAnswerContent(answer.content) }}
+                        />
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>answered by {answer.username}</span>
+                          <span>{answer.timeAgo}</span>
+                        </div>
+                        {answer.isAccepted && (
+                          <Badge className="mt-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                            ✓ Accepted Answer
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit Answer */}
+          <Card className="bg-white">
+            <CardContent className="p-6 bg-white">
+              <h3 className="text-lg font-semibold mb-4 text-black">Submit Your Answer</h3>
+              <form onSubmit={handleSubmitAnswer} className="space-y-4">
+                <RichTextEditor
+                  value={answerContent}
+                  onChange={setAnswerContent}
+                  placeholder="Write your answer here..."
+                />
                 <div className="flex justify-end">
                   <Button
                     type="submit"
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                    disabled={!answerContent.trim()}
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white disabled:from-gray-400 disabled:to-gray-400"
                   >
-                    Submit Question
+                    Submit Answer
                   </Button>
                 </div>
               </form>
