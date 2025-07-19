@@ -1,58 +1,102 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Bell, MessageSquare } from "lucide-react"
+import { MessageSquare, Users, Trophy, Zap, Search, BookOpen, Star, ArrowRight, CheckCircle, Code } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { signIn, signOut, useSession } from "next-auth/react"
 
-const mockQuestions = [
+const features = [
   {
-    id: 1,
-    title: "How to join 2 columns in a data set to make a separate column in SQL",
-    description:
-      "I do not know the code for it as I am a beginner. As an example what I need to do is like there is a column 1 containing First name, and column 2 consists of last name I want a column to combine...",
-    tags: ["SQL", "Database"],
-    votes: 5,
-    answers: 3,
-    username: "User Name",
-    timeAgo: "2 hours ago",
+    icon: MessageSquare,
+    title: "Ask & Answer",
+    description: "Get help from a community of developers and share your knowledge with others.",
+    color: "from-blue-500 to-purple-500",
   },
   {
-    id: 2,
-    title: "React useState not updating immediately",
-    description:
-      "I'm having trouble with useState not updating the state immediately when I call the setter function. The component doesn't re-render with the new value...",
-    tags: ["React", "JavaScript", "Hooks"],
-    votes: 8,
-    answers: 2,
-    username: "DevUser123",
-    timeAgo: "4 hours ago",
+    icon: Search,
+    title: "Smart Search",
+    description: "Find answers quickly with our intelligent search and filtering system.",
+    color: "from-green-500 to-blue-500",
   },
   {
-    id: 3,
-    title: "Best practices for JWT token storage",
-    description:
-      "What are the security implications of storing JWT tokens in localStorage vs cookies? I want to implement authentication in my web app...",
-    tags: ["JWT", "Security", "Authentication"],
-    votes: 12,
-    answers: 5,
-    username: "SecureDev",
-    timeAgo: "1 day ago",
+    icon: Trophy,
+    title: "Reputation System",
+    description: "Build your reputation by providing helpful answers and asking great questions.",
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    icon: Zap,
+    title: "Real-time Updates",
+    description: "Get instant notifications when someone answers your questions or comments.",
+    color: "from-orange-500 to-red-500",
+  },
+  {
+    icon: BookOpen,
+    title: "Rich Text Editor",
+    description: "Format your questions and answers with code syntax highlighting and markdown.",
+    color: "from-teal-500 to-cyan-500",
+  },
+  {
+    icon: Users,
+    title: "Community Driven",
+    description: "Join thousands of developers helping each other grow and learn together.",
+    color: "from-indigo-500 to-purple-500",
   },
 ]
 
-export default function HomePage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filter, setFilter] = useState("newest")
-  const [isLoggedIn, setIsLoggedIn] = useState(true)
-  const [notificationCount, setNotificationCount] = useState(3)
+const stats = [
+  { number: "10K+", label: "Questions Asked", icon: MessageSquare },
+  { number: "25K+", label: "Answers Given", icon: CheckCircle },
+  { number: "5K+", label: "Active Users", icon: Users },
+  { number: "98%", label: "Questions Resolved", icon: Trophy },
+]
 
+const testimonials = [
+  {
+    name: "Sarah Chen",
+    role: "Full Stack Developer",
+    company: "TechCorp",
+    content:
+      "StackIt has become my go-to platform for getting quick, accurate answers. The community is incredibly helpful!",
+    avatar: "SC",
+    rating: 5,
+  },
+  {
+    name: "Mike Rodriguez",
+    role: "Backend Engineer",
+    company: "StartupXYZ",
+    content:
+      "I love how clean and organized everything is. Finding solutions to complex problems has never been easier.",
+    avatar: "MR",
+    rating: 5,
+  },
+  {
+    name: "Emily Johnson",
+    role: "Frontend Developer",
+    company: "DesignStudio",
+    content: "The syntax highlighting and code formatting features make it perfect for sharing technical solutions.",
+    avatar: "EJ",
+    rating: 5,
+  },
+]
+
+const popularTags = [
+  { name: "React", count: "2.1k", color: "bg-blue-500" },
+  { name: "JavaScript", count: "3.5k", color: "bg-yellow-500" },
+  { name: "Python", count: "2.8k", color: "bg-green-500" },
+  { name: "SQL", count: "1.9k", color: "bg-purple-500" },
+  { name: "Node.js", count: "1.6k", color: "bg-emerald-500" },
+  { name: "CSS", count: "1.4k", color: "bg-pink-500" },
+  { name: "TypeScript", count: "1.2k", color: "bg-indigo-500" },
+  { name: "Next.js", count: "980", color: "bg-gray-700" },
+]
+
+export default function LandingPage() {
+
+  const session = useSession();
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -60,198 +104,415 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-2xl font-bold text-white hover:text-blue-100">
+              <Link href="/landing" className="text-2xl font-bold text-white hover:text-blue-100">
                 StackIt
               </Link>
-              <nav className="hidden md:flex items-center gap-4">
-                <Link href="/" className="text-sm font-medium text-blue-100 hover:text-white">
-                  Home
+              <nav className="hidden md:flex items-center gap-6">
+                <Link href="#features" className="text-sm font-medium text-blue-100 hover:text-white transition-colors">
+                  Features
+                </Link>
+                <Link
+                  href="#community"
+                  className="text-sm font-medium text-blue-100 hover:text-white transition-colors"
+                >
+                  Community
+                </Link>
+                <Link href="#about" className="text-sm font-medium text-blue-100 hover:text-white transition-colors">
+                  About
                 </Link>
               </nav>
             </div>
 
             <div className="flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20">
-                    <Bell className="h-5 w-5" />
-                    {notificationCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-red-500 text-white">
-                        {notificationCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium text-black">New answer on your question</p>
-                      <p className="text-xs text-gray-600">Someone answered "How to join 2 columns..."</p>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                    <Avatar className="h-8 w-8 ring-2 ring-white/30">
-                      <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                      <AvatarFallback className="bg-orange-500 text-white">UN</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">
-                    <Link href="/profile">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Link href="/">
+                <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => {
+                  !session.data?.user ? signIn("google", {callbackUrl: "http://localhost:3000/home"}) : signOut({callbackUrl: "http://localhost:3000"})
+                }}>
+                  {!session.data?.user ? "Sign in": "Sign Out"}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                <Input
-                  placeholder="Search questions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white text-black border-gray-300 placeholder:text-gray-500"
-                />
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="container mx-auto px-4 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2">
+                  🚀 Join 5,000+ Developers
+                </Badge>
+                <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                  Get Answers.
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {" "}
+                    Share Knowledge.
+                  </span>
+                </h1>
+                <p className="text-xl text-gray-600 leading-relaxed">
+                  StackIt is the modern Q&A platform where developers help each other solve problems, share knowledge,
+                  and build amazing things together.
+                </p>
               </div>
-              <div className="flex gap-2">
-                <Select value={filter} onValueChange={setFilter}>
-                  <SelectTrigger className="w-32 bg-white text-black border-gray-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
-                    <SelectItem value="newest" className="bg-white text-black hover:bg-gray-50">
-                      Newest
-                    </SelectItem>
-                    <SelectItem value="unanswered" className="bg-white text-black hover:bg-gray-50">
-                      Unanswered
-                    </SelectItem>
-                    <SelectItem value="most-voted" className="bg-white text-black hover:bg-gray-50">
-                      Most Voted
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <Link href="/ask">
-                  <Button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white">
-                    Ask New Question
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-4 text-lg"
+                  >
+                    Start Asking Questions
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="#features">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg bg-transparent"
+                  >
+                    Learn More
                   </Button>
                 </Link>
               </div>
+
+              <div className="flex items-center gap-8 pt-4">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Avatar key={i} className="border-2 border-white h-10 w-10">
+                      <AvatarImage src={`/placeholder.svg?height=40&width=40&text=U${i}`} />
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm">
+                        U{i}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                </div>
+                <div className="text-sm text-gray-600">
+                  <div className="font-semibold text-gray-900">5,000+ developers</div>
+                  <div>already using StackIt</div>
+                </div>
+              </div>
             </div>
 
-            {/* Questions List */}
-            <div className="space-y-4">
-              {mockQuestions.map((question) => (
-                <Card key={question.id} className="hover:shadow-md transition-shadow bg-white border border-gray-200">
-                  <CardContent className="p-6 bg-white">
-                    <div className="flex gap-4">
-                      {/* Vote Count */}
-                      <div className="flex flex-col items-center gap-1 min-w-[60px]">
-                        <div className="text-lg font-semibold text-blue-600 bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center">
-                          {question.votes}
-                        </div>
-                        <div className="text-xs text-muted-foreground">votes</div>
-                        <div className="flex items-center gap-1 text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                          <MessageSquare className="h-3 w-3" />
-                          {question.answers}
+            <div className="relative">
+              <div className="relative z-10">
+                <Card className="bg-white shadow-2xl border-0">
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="bg-blue-500 text-white text-xs">JD</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium text-gray-900">John Doe</div>
+                          <div className="text-sm text-gray-500">2 hours ago</div>
                         </div>
                       </div>
-
-                      {/* Question Content */}
-                      <div className="flex-1">
-                        <Link href={`/question/${question.id}`}>
-                          <h3 className="text-lg font-semibold hover:text-primary cursor-pointer mb-2 text-black">
-                            {question.title}
-                          </h3>
-                        </Link>
-                        <p className="text-gray-700 mb-3 line-clamp-2">{question.description}</p>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {question.tags.map((tag, index) => (
-                            <Badge
-                              key={tag}
-                              className={`text-xs text-white ${
-                                index % 4 === 0
-                                  ? "bg-purple-500 hover:bg-purple-600"
-                                  : index % 4 === 1
-                                    ? "bg-blue-500 hover:bg-blue-600"
-                                    : index % 4 === 2
-                                      ? "bg-green-500 hover:bg-green-600"
-                                      : "bg-orange-500 hover:bg-orange-600"
-                              }`}
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>asked by {question.username}</span>
-                          <span>{question.timeAgo}</span>
-                        </div>
+                      <h3 className="font-semibold text-gray-900">How to optimize React component re-renders?</h3>
+                      <div className="flex gap-2">
+                        <Badge className="bg-blue-500 text-white">React</Badge>
+                        <Badge className="bg-green-500 text-white">Performance</Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <span className="text-blue-600 font-medium">12</span> votes
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="text-green-600 font-medium">3</span> answers
+                        </span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              </div>
 
-            {/* Pagination */}
-            <div className="flex justify-center mt-8">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" disabled className="bg-white text-black border-gray-300">
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm" className="bg-blue-600 text-white border-blue-600">
-                  1
-                </Button>
-                <Button variant="outline" size="sm" className="bg-white text-black border-gray-300 hover:bg-gray-50">
-                  2
-                </Button>
-                <Button variant="outline" size="sm" className="bg-white text-black border-gray-300 hover:bg-gray-50">
-                  3
-                </Button>
-                <Button variant="outline" size="sm" className="bg-white text-black border-gray-300 hover:bg-gray-50">
-                  Next
-                </Button>
+              {/* Floating elements */}
+              <div className="absolute -top-4 -right-4 z-0">
+                <div className="w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse"></div>
+              </div>
+              <div className="absolute -bottom-8 -left-8 z-0">
+                <div className="w-32 h-32 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-20 animate-pulse delay-1000"></div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Sidebar */}
-          <div className="w-full lg:w-80">
-            <Card className="bg-white">
-              <CardHeader className="bg-white">
-                <h3 className="font-semibold text-black">Popular Tags</h3>
-              </CardHeader>
-              <CardContent className="bg-white">
-                <div className="flex flex-wrap gap-2">
-                  {["React", "JavaScript", "SQL", "Python", "Node.js", "CSS", "HTML", "JWT"].map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-secondary bg-white text-black border-gray-300"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
+      {/* Stats Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center text-white">
+                <div className="flex justify-center mb-4">
+                  <div className="p-3 bg-white/20 rounded-full">
+                    <stat.icon className="h-6 w-6" />
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="text-3xl lg:text-4xl font-bold mb-2">{stat.number}</div>
+                <div className="text-blue-100">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 mb-4">Features</Badge>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Everything you need to
+              <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
+                {" "}
+                succeed
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Powerful features designed to help developers collaborate, learn, and grow together.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow group">
+                <CardContent className="p-8">
+                  <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${feature.color} mb-6`}>
+                    <feature.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Tags Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Popular
+              <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                {" "}
+                Technologies
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Join discussions about the most popular programming languages and frameworks.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            {popularTags.map((tag, index) => (
+              <Card key={index} className="bg-white border hover:shadow-lg transition-shadow cursor-pointer group">
+                <CardContent className="p-4 text-center">
+                  <div
+                    className={`w-12 h-12 ${tag.color} rounded-lg mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition-transform`}
+                  >
+                    <Code className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="font-semibold text-gray-900 mb-1">{tag.name}</div>
+                  <div className="text-sm text-gray-500">{tag.count} questions</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="community" className="py-20 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 mb-4">
+              Testimonials
+            </Badge>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Loved by
+              <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                {" "}
+                developers
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              See what our community members have to say about their experience with StackIt.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="bg-white border-0 shadow-lg">
+                <CardContent className="p-8">
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                        {testimonial.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {testimonial.role} at {testimonial.company}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">Ready to join the community?</h2>
+            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+              Start asking questions, sharing knowledge, and connecting with thousands of developers today.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg">
+                  Get Started for Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/ask">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10 px-8 py-4 text-lg bg-transparent"
+                >
+                  Ask Your First Question
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                StackIt
+              </h3>
+              <p className="text-gray-400 leading-relaxed">
+                The modern Q&A platform for developers to share knowledge and solve problems together.
+              </p>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-white" />
+                </div>
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Platform</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <Link href="/" className="hover:text-white transition-colors">
+                    Questions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/ask" className="hover:text-white transition-colors">
+                    Ask Question
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/profile" className="hover:text-white transition-colors">
+                    Profile
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Tags
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Community</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Guidelines
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Code of Conduct
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Contact
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Privacy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 StackIt. All rights reserved. Built with ❤️ for developers.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
