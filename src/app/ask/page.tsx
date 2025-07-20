@@ -12,6 +12,7 @@ import RichTextEditor from "@/components/rich-text-editor"
 import Header from "@/components/Header";
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 
 export default function AskQuestionPage() {
   const [title, setTitle] = useState("")
@@ -62,10 +63,18 @@ export default function AskQuestionPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Handle form submission
-    console.log({ title, description, tags })
+    // console.log({ title, description, tags })
+
+    const response = await axios.post("/api/addQuestion", {
+      title,
+      description,
+      tags
+    });
+    const question = response.data;
+    router.push(`/question/${question.slug}`);
   }
 
   return (
@@ -74,7 +83,7 @@ export default function AskQuestionPage() {
     
       {/* Header */}
       <Header
-        session={session.data}
+        session={session}
         notificationCount={notificationCount}
         onSignOut={() => {signOut({callbackUrl: "http://localhost:3000/home"})}}
       />
