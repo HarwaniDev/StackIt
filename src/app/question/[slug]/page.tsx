@@ -47,6 +47,7 @@ const mockAnswers = [
 ]
 
 export default function QuestionDetailPage() {
+
   const [answerContent, setAnswerContent] = useState("")
   const [notificationCount] = useState(3)
   const [userVotes, setUserVotes] = useState<{ [key: string]: "up" | "down" | null }>({})
@@ -57,6 +58,7 @@ export default function QuestionDetailPage() {
   const [questionAuthor, setQuestionAuthor] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [questionTags, setQuestionTags] = useState([]);
+
   const { slug } = useParams();
   const session = useSession();
 
@@ -76,12 +78,18 @@ export default function QuestionDetailPage() {
     console.log("Accept answer:", answerId)
   }
 
-  const handleSubmitAnswer = (e: React.FormEvent) => {
+  const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault()
     // Handle answer submission
-    console.log("Submit answer:", answerContent)
-    setAnswerContent("")
-  }
+    const response = await axios.post("/api/addAnswer", {
+      content: answerContent,
+      slug: slug
+    })
+    setAnswers([...answers, response.data.answer]);
+    console.log(answers);
+    
+    setAnswerContent("");
+  };
 
   // Enhanced syntax highlighting for code blocks
   const renderAnswerContent = (content: string) => {
@@ -125,15 +133,15 @@ export default function QuestionDetailPage() {
       const response = await axios.post("/api/getQuestion", {
         slug
       });
-      setQuestionContent(response.data.question.description);
-      setVotesCount(response.data.question.votes.length);
-      setQuestionTitle(response.data.question.title);
-      const isoString = response.data.question.createdAt;
-      const date = new Date(isoString);
-      setCreatedAt(date.toLocaleDateString());
+      console.log(response.data);
+      
+      setQuestionContent(response.data.description);
+      setVotesCount(response.data.votesLength);
+      setQuestionTitle(response.data.title);
+      setCreatedAt(response.data.createdAt);
       setQuestionTags(response.data.tagsInQuestion);
-      setAnswers(response.data.question.answers);
-      setQuestionAuthor(response.data.name)
+      setAnswers(response.data.answers);
+      setQuestionAuthor(response.data.name);
     }
     getQuestion();
   }, []);
@@ -197,13 +205,13 @@ export default function QuestionDetailPage() {
             <h2 className="text-xl font-semibold mb-4 text-black">Answers ({answers.length})</h2>
 
             <div className="space-y-6">
-              {answers.map((answer) => (
-                <Card key={answer.id} className={true ? "border-green-500 bg-white" : "bg-white"}>
+              {answers.map((answer, index) => (
+                <Card key={index} className={true ? "border-green-500 bg-white" : "bg-white"}>
                   <CardContent className="p-6 bg-white">
                     <div className="flex gap-4">
                       {/* Vote Controls */}
                       <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleVote(answer.id, "up")}
@@ -221,7 +229,7 @@ export default function QuestionDetailPage() {
                           className={`hover:bg-red-100 ${userVotes[answer.id] === "down" ? "text-red-600 bg-red-100" : "text-gray-500"}`}
                         >
                           <ChevronDown className="h-5 w-5" />
-                        </Button> */}
+                        </Button>
                         {/* {mockQuestion.isOwner && (
                           <Button
                             variant="ghost"
@@ -241,14 +249,9 @@ export default function QuestionDetailPage() {
                           dangerouslySetInnerHTML={{ __html: renderAnswerContent(answer.content) }}
                         />
                         <div className="flex items-center justify-between text-sm text-gray-600">
-                          {/* <span>answered by {answer.username}</span>
-                          <span>{answer.timeAgo}</span> */}
+                          <span>answered by {answer.authorName}</span>
+                          <span>{answer.createdAt}</span>
                         </div>
-                        {/* {answer.isAccepted && (
-                          <Badge className="mt-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white">
-                            ✓ Accepted Answer
-                          </Badge>
-                        )} */}
                       </div>
                     </div>
                   </CardContent>
