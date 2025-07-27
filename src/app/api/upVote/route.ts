@@ -44,9 +44,7 @@ export const POST = async (req: NextRequest) => {
                     }
                 })
         }
-        
-        
     } catch (error) {
-
+        return NextResponse.json({ error: "Failed to add the vote" }, { status: 500 })
     }
 }
