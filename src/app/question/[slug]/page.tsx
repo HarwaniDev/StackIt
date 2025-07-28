@@ -13,39 +13,6 @@ import Header from "@/components/Header";
 import { signIn, useSession } from "next-auth/react";
 import axios from "axios"
 
-const mockQuestion = {
-  id: 1,
-  title: "How to join 2 columns in a data set to make a separate column in SQL",
-  description:
-    "I do not know the code for it as I am a beginner. As an example what I need to do is like there is a column 1 containing First name, and column 2 consists of last name I want a column to combine both first name and last name.",
-  tags: ["SQL", "Database"],
-  votes: 5,
-  username: "User Name",
-  timeAgo: "2 hours ago",
-  isOwner: true,
-}
-
-const mockAnswers = [
-  {
-    id: 1,
-    content:
-      "You can use the CONCAT function or the || operator to join columns:\n\n```sql\nSELECT CONCAT(first_name, ' ', last_name) AS full_name\nFROM your_table;\n```\n\nOr using the || operator:\n\n```sql\nSELECT first_name || ' ' || last_name AS full_name\nFROM your_table;\n```",
-    votes: 8,
-    username: "SQLExpert",
-    timeAgo: "1 hour ago",
-    isAccepted: true,
-  },
-  {
-    id: 2,
-    content:
-      "Another approach is to use the CONCAT_WS function which handles NULL values better:\n\n```sql\nSELECT CONCAT_WS(' ', first_name, last_name) AS full_name\nFROM your_table;\n```",
-    votes: 3,
-    username: "DatabasePro",
-    timeAgo: "30 minutes ago",
-    isAccepted: false,
-  },
-]
-
 export default function QuestionDetailPage() {
 
   const { slug } = useParams();
