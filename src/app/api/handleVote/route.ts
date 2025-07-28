@@ -26,10 +26,6 @@ export const POST = async (req: NextRequest) => {
                 }
             }
         });
-        console.log(vote);
-        console.log(userId);
-        console.log(answerId);
-        console.log(voteType);
         
         if (!vote && (voteType == "1" || voteType == "-1")) {
             await db.vote.create({
