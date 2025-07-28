@@ -60,12 +60,14 @@ export default function QuestionDetailPage() {
   const [questionAuthor, setQuestionAuthor] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [questionTags, setQuestionTags] = useState([]);
+  const [voteCount, setVoteCount] = useState<{ [key: string]: number }>({});
 
   const handleVote = async (answerId: number, voteType: "up" | "down") => {
     const currentVote = userVotes[answerId]
     if (currentVote === voteType) {
       // Remove vote if clicking the same vote
       setUserVotes((prev) => ({ ...prev, [answerId]: null }))
+      setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
       await axios.post("/api/handleVote", {
         userId: session.data?.user.id,
         answerId: answerId,
@@ -74,15 +76,13 @@ export default function QuestionDetailPage() {
     } else {
       // Set new vote
       setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
-
+      setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
       await axios.post("/api/handleVote", {
         userId: session.data?.user.id,
         answerId: answerId,
         voteType: voteType === "up" ? 1 : -1
       })
     }
-
-
   }
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
@@ -147,6 +147,13 @@ export default function QuestionDetailPage() {
       setQuestionTags(response.data.tagsInQuestion);
       setAnswers(response.data.answers);
       setQuestionAuthor(response.data.name);
+
+      const voteCounts = response.data.answers.reduce((acc: any, answer: any) => {
+        acc[answer.id] = answer.votes;
+        return acc;
+      }, {});
+      
+      setVoteCount(voteCounts);      
     }
 
     async function getVotesData() {
@@ -156,19 +163,36 @@ export default function QuestionDetailPage() {
 
       response.data.answerIds.map((vote: any) => {
         let voteType: string;
-        if(vote.value === 1) {
+        if (vote.value === 1) {
           voteType = "up"
         } else {
           voteType = "down"
         }
         const answerId = vote.answerId
-      setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
+        setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
       })
     }
 
     getQuestion();
     getVotesData();
   }, []);
+
+  // useEffect(() => {
+  //   if(!answers) {
+  //     console.log("early return");
+
+  //     return;
+  //   }
+  //   console.log("staying till late");
+
+  //   answers.map((answer) => {
+  //     console.log("here");
+
+  //     console.log(answer);
+
+  //   })
+  //   console.log(voteCount)
+  // }, [])
 
   return (
     <div className="min-h-screen bg-white">
@@ -244,7 +268,7 @@ export default function QuestionDetailPage() {
                           <ChevronUp className="h-5 w-5" />
                         </Button>
                         <span className="text-lg font-semibold text-blue-600 bg-blue-50 rounded-full w-10 h-10 flex items-center justify-center">
-                          {answer.votes}
+                          {voteCount[answer.id]}
                         </span>
                         <Button
                           variant="ghost"
