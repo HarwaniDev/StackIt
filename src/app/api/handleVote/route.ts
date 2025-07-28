@@ -26,16 +26,25 @@ export const POST = async (req: NextRequest) => {
                 }
             }
         });
-        
-        if (!vote && (voteType == "1" || voteType == "-1")) {
-            await db.vote.create({
-                data: {
+
+        if (voteType == "1" || voteType == "-1") {
+            await db.vote.upsert({
+                where: {
+                    userId_answerId: {
+                        userId: userId,
+                        answerId: answerId
+                    }
+                },
+                update: {
+                    value: voteType
+                },
+                create: {
                     userId: userId,
                     answerId: answerId,
                     value: voteType
                 }
             })
-        } else {
+        } else if (vote && voteType == "0") {
             await db.vote.delete({
                 where: {
                     userId_answerId: {
@@ -48,7 +57,7 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json({ message: "vote operation successful" }, { status: 201 });
     } catch (error) {
         console.log(error);
-        
+
         return NextResponse.json({ error: "Failed to add the vote" }, { status: 500 });
     }
 }
