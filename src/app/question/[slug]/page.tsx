@@ -48,34 +48,41 @@ const mockAnswers = [
 
 export default function QuestionDetailPage() {
 
+  const { slug } = useParams();
+  const session = useSession();
+
   const [answerContent, setAnswerContent] = useState("")
   const [notificationCount] = useState(3)
   const [userVotes, setUserVotes] = useState<{ [key: string]: "up" | "down" | null }>({})
   const [answers, setAnswers] = useState<any[]>([]);
   const [questionTitle, setQuestionTitle] = useState("");
   const [questionContent, setQuestionContent] = useState("");
-  const [votesCount, setVotesCount] = useState(0);
   const [questionAuthor, setQuestionAuthor] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [questionTags, setQuestionTags] = useState([]);
 
-  const { slug } = useParams();
-  const session = useSession();
-
-  const handleVote = (answerId: number, voteType: "up" | "down") => {
+  const handleVote = async (answerId: number, voteType: "up" | "down") => {
     const currentVote = userVotes[answerId]
     if (currentVote === voteType) {
       // Remove vote if clicking the same vote
       setUserVotes((prev) => ({ ...prev, [answerId]: null }))
+      await axios.post("/api/handleVote", {
+        userId: session.data?.user.id,
+        answerId: answerId,
+        voteType: 0
+      })
     } else {
       // Set new vote
       setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
-    }
-  }
 
-  const handleAcceptAnswer = (answerId: number) => {
-    // Handle accepting answer
-    console.log("Accept answer:", answerId)
+      await axios.post("/api/handleVote", {
+        userId: session.data?.user.id,
+        answerId: answerId,
+        voteType: voteType === "up" ? 1 : -1
+      })
+    }
+
+
   }
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
@@ -87,46 +94,45 @@ export default function QuestionDetailPage() {
     })
     setAnswers([...answers, response.data.answer]);
     console.log(answers);
-    
     setAnswerContent("");
   };
 
   // Enhanced syntax highlighting for code blocks
-  const renderAnswerContent = (content: string) => {
-    let html = content
+  // const renderAnswerContent = (content: string) => {
+  //   let html = content
 
-    // SQL syntax highlighting
-    html = html.replace(/```sql\n([\s\S]*?)```/g, (match, code) => {
-      let highlightedCode = code
-      // SQL keywords
-      highlightedCode = highlightedCode.replace(
-        /\b(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|OUTER|ON|GROUP BY|ORDER BY|HAVING|UNION|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TABLE|DATABASE|INDEX|CONCAT|CONCAT_WS|AS)\b/gi,
-        '<span class="text-blue-600 font-semibold">$1</span>',
-      )
-      // String literals
-      highlightedCode = highlightedCode.replace(/'([^']*)'/g, "<span class=\"text-green-600\">'$1'</span>")
-      // Comments
-      highlightedCode = highlightedCode.replace(/--.*$/gm, '<span class="text-gray-500 italic">$&</span>')
+  //   // SQL syntax highlighting
+  //   html = html.replace(/```sql\n([\s\S]*?)```/g, (match, code) => {
+  //     let highlightedCode = code
+  //     // SQL keywords
+  //     highlightedCode = highlightedCode.replace(
+  //       /\b(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|OUTER|ON|GROUP BY|ORDER BY|HAVING|UNION|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TABLE|DATABASE|INDEX|CONCAT|CONCAT_WS|AS)\b/gi,
+  //       '<span class="text-blue-600 font-semibold">$1</span>',
+  //     )
+  //     // String literals
+  //     highlightedCode = highlightedCode.replace(/'([^']*)'/g, "<span class=\"text-green-600\">'$1'</span>")
+  //     // Comments
+  //     highlightedCode = highlightedCode.replace(/--.*$/gm, '<span class="text-gray-500 italic">$&</span>')
 
-      return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${highlightedCode}</code></pre>`
-    })
+  //     return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${highlightedCode}</code></pre>`
+  //   })
 
-    // Generic code blocks
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-      return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${code.trim()}</code></pre>`
-    })
+  //   // Generic code blocks
+  //   html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+  //     return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${code.trim()}</code></pre>`
+  //   })
 
-    // Inline code
-    html = html.replace(
-      /`([^`]+)`/g,
-      '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-black">$1</code>',
-    )
+  //   // Inline code
+  //   html = html.replace(
+  //     /`([^`]+)`/g,
+  //     '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-black">$1</code>',
+  //   )
 
-    // Line breaks
-    html = html.replace(/\n/g, "<br>")
+  //   // Line breaks
+  //   html = html.replace(/\n/g, "<br>")
 
-    return html
-  }
+  //   return html
+  // }
 
   useEffect(() => {
     async function getQuestion() {
@@ -134,16 +140,34 @@ export default function QuestionDetailPage() {
         slug
       });
       console.log(response.data);
-      
+
       setQuestionContent(response.data.description);
-      setVotesCount(response.data.votesLength);
       setQuestionTitle(response.data.title);
       setCreatedAt(response.data.createdAt);
       setQuestionTags(response.data.tagsInQuestion);
       setAnswers(response.data.answers);
       setQuestionAuthor(response.data.name);
     }
+
+    async function getVotesData() {
+      const response = await axios.post("/api/checkVotes", {
+        slug
+      });
+
+      response.data.answerIds.map((vote: any) => {
+        let voteType: string;
+        if(vote.value === 1) {
+          voteType = "up"
+        } else {
+          voteType = "down"
+        }
+        const answerId = vote.answerId
+      setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
+      })
+    }
+
     getQuestion();
+    getVotesData();
   }, []);
 
   return (
@@ -206,7 +230,7 @@ export default function QuestionDetailPage() {
 
             <div className="space-y-6">
               {answers.map((answer, index) => (
-                <Card key={index} className={true ? "border-green-500 bg-white" : "bg-white"}>
+                <Card key={index} className="border-green-500 bg-white">
                   <CardContent className="p-6 bg-white">
                     <div className="flex gap-4">
                       {/* Vote Controls */}
@@ -244,10 +268,9 @@ export default function QuestionDetailPage() {
 
                       {/* Answer Content */}
                       <div className="flex-1">
-                        <div
-                          className="prose max-w-none mb-4"
-                          dangerouslySetInnerHTML={{ __html: renderAnswerContent(answer.content) }}
-                        />
+                        <div className="prose max-w-none mb-4">
+                          {answer.content}
+                        </div>
                         <div className="flex items-center justify-between text-sm text-gray-600">
                           <span>answered by {answer.authorName}</span>
                           <span>{answer.createdAt}</span>
