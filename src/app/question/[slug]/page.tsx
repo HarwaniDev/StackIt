@@ -29,12 +29,12 @@ export default function QuestionDetailPage() {
   const [questionTags, setQuestionTags] = useState([]);
   const [voteCount, setVoteCount] = useState<{ [key: string]: number }>({});
 
-  const handleVote = async (answerId: number, voteType: "up" | "down") => {
+  const handleVote = async (answerId: string, voteType: "up" | "down") => {
     const currentVote = userVotes[answerId]
     if (currentVote === voteType) {
       // Remove vote if clicking the same vote
       setUserVotes((prev) => ({ ...prev, [answerId]: null }))
-      setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
+      // setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
       await axios.post("/api/handleVote", {
         userId: session.data?.user.id,
         answerId: answerId,
@@ -43,13 +43,29 @@ export default function QuestionDetailPage() {
     } else {
       // Set new vote
       setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
-      setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
+      // setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
       await axios.post("/api/handleVote", {
         userId: session.data?.user.id,
         answerId: answerId,
         voteType: voteType === "up" ? 1 : -1
       })
     }
+
+    if (!currentVote && voteType) {
+      setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
+    } else if (currentVote !== voteType) {
+      
+    } else if (currentVote === voteType) {
+      setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
+    }
+
+    // if (currentVote === voteType) {
+    //   console.log(currentVote);
+    //   setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
+    // } else {
+    //   console.log(currentVote);
+    //   setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
+    // }
   }
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
@@ -59,8 +75,21 @@ export default function QuestionDetailPage() {
       content: answerContent,
       slug: slug
     })
-    setAnswers([...answers, response.data.answer]);
-    console.log(answers);
+
+    // Get the current user's name for the new answer
+    const currentUser = session.data?.user;
+
+    // Create a new answer object with the same structure as the existing answers
+    const newAnswer = {
+      id: response.data.id,
+      createdAt: new Date().toLocaleDateString(),
+      content: answerContent,
+      authorName: currentUser?.name ?? "",
+      votes: 0,
+    };
+
+    setAnswers((prev) => [...prev, newAnswer]);
+    setVoteCount((prev) => ({ ...prev, [response.data.id]: 0 }));
     setAnswerContent("");
   };
 
@@ -119,8 +148,8 @@ export default function QuestionDetailPage() {
         acc[answer.id] = answer.votes;
         return acc;
       }, {});
-      
-      setVoteCount(voteCounts);      
+
+      setVoteCount(voteCounts);
     }
 
     async function getVotesData() {
@@ -143,23 +172,6 @@ export default function QuestionDetailPage() {
     getQuestion();
     getVotesData();
   }, []);
-
-  // useEffect(() => {
-  //   if(!answers) {
-  //     console.log("early return");
-
-  //     return;
-  //   }
-  //   console.log("staying till late");
-
-  //   answers.map((answer) => {
-  //     console.log("here");
-
-  //     console.log(answer);
-
-  //   })
-  //   console.log(voteCount)
-  // }, [])
 
   return (
     <div className="min-h-screen bg-white">
