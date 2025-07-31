@@ -12,6 +12,8 @@ import RichTextEditor from "@/components/rich-text-editor"
 import Header from "@/components/Header";
 import { signIn, useSession } from "next-auth/react";
 import axios from "axios"
+import { renderPreview } from "@/components/ui/render"
+import { Pagination } from "@/components/ui/pagination"
 
 export default function QuestionDetailPage() {
 
@@ -28,13 +30,14 @@ export default function QuestionDetailPage() {
   const [createdAt, setCreatedAt] = useState("");
   const [questionTags, setQuestionTags] = useState([]);
   const [voteCount, setVoteCount] = useState<{ [key: string]: number }>({});
+  const [page, setPage] = useState(1);
+  const [totalAnswers, setTotalAnswers] = useState(0);
 
   const handleVote = async (answerId: string, voteType: "up" | "down") => {
     const currentVote = userVotes[answerId]
     if (currentVote === voteType) {
       // Remove vote if clicking the same vote
       setUserVotes((prev) => ({ ...prev, [answerId]: null }))
-      // setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
       await axios.post("/api/handleVote", {
         userId: session.data?.user.id,
         answerId: answerId,
@@ -43,7 +46,6 @@ export default function QuestionDetailPage() {
     } else {
       // Set new vote
       setUserVotes((prev) => ({ ...prev, [answerId]: voteType }))
-      // setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
       await axios.post("/api/handleVote", {
         userId: session.data?.user.id,
         answerId: answerId,
@@ -54,18 +56,10 @@ export default function QuestionDetailPage() {
     if (!currentVote && voteType) {
       setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
     } else if (currentVote !== voteType) {
-      
+
     } else if (currentVote === voteType) {
       setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
     }
-
-    // if (currentVote === voteType) {
-    //   console.log(currentVote);
-    //   setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) - 1 }));
-    // } else {
-    //   console.log(currentVote);
-    //   setVoteCount((prev) => ({ ...prev, [answerId]: (prev[answerId] ?? 0) + 1 }));
-    // }
   }
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
@@ -93,49 +87,12 @@ export default function QuestionDetailPage() {
     setAnswerContent("");
   };
 
-  // Enhanced syntax highlighting for code blocks
-  // const renderAnswerContent = (content: string) => {
-  //   let html = content
-
-  //   // SQL syntax highlighting
-  //   html = html.replace(/```sql\n([\s\S]*?)```/g, (match, code) => {
-  //     let highlightedCode = code
-  //     // SQL keywords
-  //     highlightedCode = highlightedCode.replace(
-  //       /\b(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|OUTER|ON|GROUP BY|ORDER BY|HAVING|UNION|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TABLE|DATABASE|INDEX|CONCAT|CONCAT_WS|AS)\b/gi,
-  //       '<span class="text-blue-600 font-semibold">$1</span>',
-  //     )
-  //     // String literals
-  //     highlightedCode = highlightedCode.replace(/'([^']*)'/g, "<span class=\"text-green-600\">'$1'</span>")
-  //     // Comments
-  //     highlightedCode = highlightedCode.replace(/--.*$/gm, '<span class="text-gray-500 italic">$&</span>')
-
-  //     return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${highlightedCode}</code></pre>`
-  //   })
-
-  //   // Generic code blocks
-  //   html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-  //     return `<pre class="bg-gray-100 p-4 rounded border overflow-x-auto my-4"><code class="text-sm font-mono text-black">${code.trim()}</code></pre>`
-  //   })
-
-  //   // Inline code
-  //   html = html.replace(
-  //     /`([^`]+)`/g,
-  //     '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-black">$1</code>',
-  //   )
-
-  //   // Line breaks
-  //   html = html.replace(/\n/g, "<br>")
-
-  //   return html
-  // }
-
   useEffect(() => {
     async function getQuestion() {
       const response = await axios.post("/api/getQuestion", {
-        slug
+        slug: slug,
+        page: page
       });
-      console.log(response.data);
 
       setQuestionContent(response.data.description);
       setQuestionTitle(response.data.title);
@@ -143,6 +100,7 @@ export default function QuestionDetailPage() {
       setQuestionTags(response.data.tagsInQuestion);
       setAnswers(response.data.answers);
       setQuestionAuthor(response.data.name);
+      setTotalAnswers(response.data.totalAnswers)
 
       const voteCounts = response.data.answers.reduce((acc: any, answer: any) => {
         acc[answer.id] = answer.votes;
@@ -171,7 +129,7 @@ export default function QuestionDetailPage() {
 
     getQuestion();
     getVotesData();
-  }, []);
+  }, [page]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -217,7 +175,7 @@ export default function QuestionDetailPage() {
               </div>
 
               <div className="prose max-w-none mb-6">
-                <p className="text-gray-700">{questionContent}</p>
+                <p className="text-gray-700">{renderPreview(questionContent)}</p>
               </div>
 
               <div className="flex items-center justify-between text-sm text-gray-600">
@@ -229,7 +187,7 @@ export default function QuestionDetailPage() {
 
           {/* Answers */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-black">Answers ({answers.length})</h2>
+            <h2 className="text-xl font-semibold mb-4 text-black">Answers ({totalAnswers})</h2>
 
             <div className="space-y-6">
               {answers.map((answer, index) => (
@@ -257,16 +215,6 @@ export default function QuestionDetailPage() {
                         >
                           <ChevronDown className="h-5 w-5" />
                         </Button>
-                        {/* {mockQuestion.isOwner && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleAcceptAnswer(answer.id)}
-                            className={`hover:bg-green-100 ${answer.isAccepted ? "text-green-600 bg-green-100" : "text-gray-500"}`}
-                          >
-                            <Check className="h-5 w-5" />
-                          </Button>
-                        )} */}
                       </div>
 
                       {/* Answer Content */}
@@ -285,6 +233,12 @@ export default function QuestionDetailPage() {
               ))}
             </div>
           </div>
+          <Pagination
+            totalPages={Math.ceil(totalAnswers / 10)}
+            currentPage={page}
+            onPageChange={setPage}
+            className="mb-8"
+          />
 
           {/* Submit Answer */}
           <Card className="bg-white">
