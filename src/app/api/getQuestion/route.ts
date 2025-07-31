@@ -24,27 +24,34 @@ export const POST = async (req: NextRequest) => {
             include: {
                 answers: {
                     include: {
-                        votes: true
+                        votes: true,
+                        author: {
+                            select: {
+                                name: true
+                            }
+                        }
                     },
                 skip: (page - 1) * 10,
                 take: 10    
                 },
-                tags: true,
+                tags: {
+                    select: {
+                        tag: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                },
                 notifications: true
             }
         });
        
         const tagsInQuestion: string[] = [];
-        await Promise.all(
-            question?.tags.map(async (tag) => {
-                const response = await db.tag.findFirst({
-                    where: { id: tag.tagId }
-                });
-                if (response) {
-                    tagsInQuestion.push(response.name);
-                }
-            }) ?? []
-        );
+        question?.tags.map((tag) => {
+            tagsInQuestion.push(tag.tag.name)
+        })
+
         const author = await db.user.findFirst({
             where: {
                 id: question?.authorId
@@ -59,22 +66,15 @@ export const POST = async (req: NextRequest) => {
             votes: number;
         }[] = []
 
-        
-        await Promise.all(
-            question?.answers.map(async (answer) => {
-                const author = await db.user.findUnique({
-                    where: { id: answer.authorId }
-                });
-
-                answers.push({
-                    id: answer.id,
-                    createdAt: new Date(answer.createdAt).toLocaleDateString(),
-                    content: answer.content,
-                    authorName: author?.name ?? "",
-                    votes: answer.votes.length,
-                })
-            }) ?? []
-        )
+        question?.answers.map((answer) => {
+            answers.push({
+                id: answer.id,
+                createdAt: new Date(answer.createdAt).toLocaleDateString(),
+                content: answer.content,
+                authorName: answer.author.name ?? "",
+                votes: answer.votes.length
+            })
+        })
         
         const totalAnswers = await db.answer.count({
             where: {
@@ -87,6 +87,7 @@ export const POST = async (req: NextRequest) => {
         const name = author?.name;
         const isoString = question?.createdAt;
         const date = new Date(isoString!).toLocaleDateString();
+        
         const response = {
             title: question?.title,
             description: question?.description,
@@ -96,16 +97,6 @@ export const POST = async (req: NextRequest) => {
             totalAnswers,
             name
         }
-        // setQuestionContent(response.data.question.description);
-        // setVotesCount(response.data.question.votes.length);
-        // setQuestionTitle(response.data.question.title);
-        // const isoString = response.data.question.createdAt;
-        // const date = new Date(isoString);
-        // setCreatedAt(date.toLocaleDateString());
-        // setQuestionTags(response.data.tagsInQuestion);
-        // setAnswers(response.data.question.answers);
-        // setAnswerVotesLength(response.data.question.answers.length)
-        // setQuestionAuthor(response.data.name);
 
         return NextResponse.json(response, { status: 201 });
     } catch (error) {
