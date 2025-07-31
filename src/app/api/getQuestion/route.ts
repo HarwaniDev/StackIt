@@ -15,7 +15,7 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { slug } = body;
+    const { slug, page } = body;
     try {
         const question = await db.question.findUnique({
             where: {
@@ -25,13 +25,15 @@ export const POST = async (req: NextRequest) => {
                 answers: {
                     include: {
                         votes: true
-                    }
+                    },
+                skip: (page - 1) * 10,
+                take: 10    
                 },
-                votes: true,
                 tags: true,
                 notifications: true
             }
         });
+       
         const tagsInQuestion: string[] = [];
         await Promise.all(
             question?.tags.map(async (tag) => {
@@ -48,7 +50,9 @@ export const POST = async (req: NextRequest) => {
                 id: question?.authorId
             }
         });
+        
         let answers: {
+            id: string;
             createdAt: string;
             content: string;
             authorName: string;
@@ -60,17 +64,24 @@ export const POST = async (req: NextRequest) => {
             question?.answers.map(async (answer) => {
                 const author = await db.user.findUnique({
                     where: { id: answer.authorId }
-                })
+                });
+
                 answers.push({
+                    id: answer.id,
                     createdAt: new Date(answer.createdAt).toLocaleDateString(),
                     content: answer.content,
                     authorName: author?.name ?? "",
-                    votes: answer.votes.length
+                    votes: answer.votes.length,
                 })
             }) ?? []
         )
-        question?.answers.map((answer) => {
-
+        
+        const totalAnswers = await db.answer.count({
+            where: {
+                question: {
+                    slug: slug
+                }
+            }
         })
 
         const name = author?.name;
@@ -79,10 +90,10 @@ export const POST = async (req: NextRequest) => {
         const response = {
             title: question?.title,
             description: question?.description,
-            votesLength: question?.votes.length,
             createdAt: date,
             tagsInQuestion,
             answers,
+            totalAnswers,
             name
         }
         // setQuestionContent(response.data.question.description);
