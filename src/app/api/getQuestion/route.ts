@@ -63,6 +63,7 @@ export const POST = async (req: NextRequest) => {
             createdAt: string;
             content: string;
             authorName: string;
+            authorId: string;
             votes: number;
         }[] = []
 
@@ -72,7 +73,8 @@ export const POST = async (req: NextRequest) => {
                 createdAt: new Date(answer.createdAt).toLocaleDateString(),
                 content: answer.content,
                 authorName: answer.author.name ?? "",
-                votes: answer.votes.length
+                votes: answer.votes.length,
+                authorId: answer.authorId
             })
         })
         
@@ -95,7 +97,8 @@ export const POST = async (req: NextRequest) => {
             tagsInQuestion,
             answers,
             totalAnswers,
-            name
+            name,
+            questionAuthorId: question?.authorId,
         }
 
         return NextResponse.json(response, { status: 201 });
