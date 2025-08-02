@@ -16,6 +16,20 @@ export const GET = async () => {
                         select: {
                             name: true
                         }
+                    },
+                    tags: {
+                        include: {
+                            tag: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+                    answers: {
+                        select: {
+                            _count: true
+                        }
                     }
                 }
             }),
@@ -25,8 +39,11 @@ export const GET = async () => {
         const questionsResponse = questions.map((question) => ({
             slug: question.slug,
             title: question.title,
+            description: question.description,
             createdAt: new Date(question.createdAt).toLocaleDateString(),
-            author: question.author?.name ?? ""
+            author: question.author?.name ?? "",
+            tags: question.tags.map((tag) => tag.tag.name) ?? [],
+            answersCount: question.answers.length
         }));
 
         return NextResponse.json({ questionsResponse, totalQuestions }, { status: 201 });
