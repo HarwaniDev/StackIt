@@ -27,6 +27,7 @@ export default function QuestionDetailPage() {
   const [questionTitle, setQuestionTitle] = useState("");
   const [questionContent, setQuestionContent] = useState("");
   const [questionAuthor, setQuestionAuthor] = useState("");
+  const [questionAuthorId, setQuestionAuthorId] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [questionTags, setQuestionTags] = useState([]);
   const [voteCount, setVoteCount] = useState<{ [key: string]: number }>({});
@@ -79,6 +80,7 @@ export default function QuestionDetailPage() {
       createdAt: new Date().toLocaleDateString(),
       content: answerContent,
       authorName: currentUser?.name ?? "",
+      authorId: currentUser?.id ?? "",
       votes: 0,
     };
 
@@ -100,7 +102,8 @@ export default function QuestionDetailPage() {
       setQuestionTags(response.data.tagsInQuestion);
       setAnswers(response.data.answers);
       setQuestionAuthor(response.data.name);
-      setTotalAnswers(response.data.totalAnswers)
+      setQuestionAuthorId(response.data.questionAuthorId);
+      setTotalAnswers(response.data.totalAnswers);
 
       const voteCounts = response.data.answers.reduce((acc: any, answer: any) => {
         acc[answer.id] = answer.votes;
@@ -139,17 +142,8 @@ export default function QuestionDetailPage() {
         notificationCount={notificationCount}
         onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/question/1" })}
       />
-
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          {/* Breadcrumb */}
-          <nav className="mb-6 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-primary">
-              Questions
-            </Link>
-            <span className="mx-2">{">"}</span>
-            <span>How to join 2...</span>
-          </nav>
 
           {/* Question */}
           <Card className="mb-8 bg-white">
@@ -218,15 +212,24 @@ export default function QuestionDetailPage() {
                       </div>
 
                       {/* Answer Content */}
-                      <div className="flex-1">
-                        <div className="prose max-w-none mb-4">
+                      <div className="flex-1 flex flex-col">
+                        <div className="prose max-w-none flex-1">
                           {answer.content}
                         </div>
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>answered by {answer.authorName}</span>
-                          <span>{answer.createdAt}</span>
-                        </div>
                       </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm text-gray-600 mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <span>answered by {answer.authorName}</span>
+                      
+                        {answer.authorId === questionAuthorId && (
+                          <Badge className="bg-blue-500 text-white text-xs">
+                            OP
+                          </Badge>
+                        )}
+                      </div>
+                      <span>{answer.createdAt}</span>
                     </div>
                   </CardContent>
                 </Card>
