@@ -47,15 +47,19 @@ export const authConfig = {
       // Handle new user registration
       if (account?.provider === "google") {
         try {
-          // Check if user exists
+          // Use the stable Google sub ID as the user ID
+          const googleId = profile?.sub as string;
+          
+          // Check if user exists by Google ID
           const existingUser = await db.user.findUnique({
-            where: { email: user.email! },
+            where: { id: googleId },
           });
 
           if (!existingUser) {
-            // Create new user with default role
+            // Create new user with Google ID as the stable identifier
             await db.user.create({
               data: {
+                id: googleId,
                 email: user.email!,
                 name: user.name,
                 image: user.image,
@@ -69,6 +73,24 @@ export const authConfig = {
         }
       }
       return true;
+    },
+    jwt: async ({ token, user, account, profile }) => {
+      // When signing in, add the user data to the token
+      if (account?.provider === "google" && profile) {
+        const googleId = profile.sub as string;
+        token.sub = googleId; // Use Google's stable sub as the user ID
+        
+        // Fetch user role from database
+        const dbUser = await db.user.findUnique({
+          where: { id: googleId },
+          select: { role: true }
+        });
+        
+        if (dbUser) {
+          token.role = dbUser.role;
+        }
+      }
+      return token;
     },
     session: ({ session, token }) => {
       // Add id and role to session from JWT token
