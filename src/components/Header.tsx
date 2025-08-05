@@ -10,15 +10,23 @@ import React from "react";
 import type { Session } from "next-auth";
 import type { SessionContextValue } from "next-auth/react";
 
+interface Notification {
+  message: string;
+  createdAt: string;
+  slug: string;
+}
+
 interface HeaderProps {
   session: SessionContextValue;
   notificationCount?: number;
+  notifications?: Notification[];
+  onClearNotifications?: () => void;
   onSignIn?: () => void;
   onSignOut?: () => void;
   children?: React.ReactNode;
 }
 
-export default function Header({ session, notificationCount = 0, onSignIn, onSignOut, children }: HeaderProps) {
+export default function Header({ session, notificationCount = 0, notifications = [], onClearNotifications, onSignIn, onSignOut, children }: HeaderProps) {
   return (
     <header className="border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
       <div className="container mx-auto px-4 py-3">
@@ -43,12 +51,31 @@ export default function Header({ session, notificationCount = 0, onSignIn, onSig
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium text-black">New answer on your question</p>
-                      <p className="text-xs text-gray-600">Someone answered "How to join 2 columns..."</p>
-                    </div>
-                  </DropdownMenuItem>
+                  {notifications.length === 0 ? (
+                    <DropdownMenuItem className="bg-white hover:bg-gray-50">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-medium text-black">No notifications</p>
+                      </div>
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      {notifications.map((notification, idx) => (
+                        <DropdownMenuItem key={idx} className="bg-white hover:bg-gray-50">
+                          <Link href={`/question/${notification.slug}`} className="w-full">
+                            <div className="flex flex-col gap-1">
+                              <p className="text-sm font-medium text-black">{notification.message}</p>
+                              <p className="text-xs text-gray-600">{notification.createdAt}</p>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuItem className="bg-white hover:bg-gray-50 flex justify-center">
+                        <Button variant="outline" className="w-full" onClick={onClearNotifications}>
+                          Clear All
+                        </Button>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
