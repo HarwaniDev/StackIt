@@ -28,6 +28,9 @@ export const GET = async () => {
                 id: {
                     in: tagIds
                 }
+            },
+            select: {
+                name: true
             }
         });
 
