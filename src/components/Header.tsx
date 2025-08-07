@@ -2,12 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import React from "react";
-import type { Session } from "next-auth";
 import type { SessionContextValue } from "next-auth/react";
 
 interface Notification {
@@ -82,7 +81,7 @@ export default function Header({ session, notificationCount = 0, notifications =
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="hover:bg-white/20">
                     <Avatar className="h-8 w-8 ring-2 ring-white/30">
-                    <img src={session.data.user.image ?? ""} alt="" />
+                      <img src={session.data.user.image ?? ""} alt="" />
                       {/* <AvatarFallback className="bg-orange-500 text-white">{session.user.name ? session.user.name[0] : ""}</AvatarFallback> */}
                     </Avatar>
                   </Button>

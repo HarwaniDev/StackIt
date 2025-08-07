@@ -9,13 +9,7 @@ import {
   Strikethrough,
   List,
   ListOrdered,
-  LinkIcon,
-  ImageIcon,
-  Smile,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Code,
+  Highlighter 
 } from "lucide-react"
 import { renderPreview } from "@/components/ui/render"
 
@@ -52,10 +46,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const handleStrikethrough = () => insertText("~~", "~~")
   const handleBulletList = () => insertText("\n- ", "")
   const handleNumberedList = () => insertText("\n1. ", "")
-  const handleLink = () => insertText("[", "](url)")
-  const handleImage = () => insertText("![alt text](", ")")
-  const handleEmoji = () => insertText("😊", "")
-  const handleCodeBlock = () => insertText("\n```\n", "\n```\n")
+  const handleInlineCode = () => insertText("`", "`");
 
   return (
     <div className="border rounded-md bg-white">
@@ -92,6 +83,17 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           <Strikethrough className="h-4 w-4" />
         </Button>
 
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleInlineCode}
+          className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-600 border border-gray-200 bg-white"
+          title="Highlight"
+        >
+          <Highlighter className="h-4 w-4" />
+        </Button>
+
         <div className="w-px h-6 bg-gray-300 mx-2" />
 
         <Button
@@ -113,79 +115,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           title="Numbered List"
         >
           <ListOrdered className="h-4 w-4" />
-        </Button>
-
-        <div className="w-px h-6 bg-gray-300 mx-2" />
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCodeBlock}
-          className="h-9 w-9 p-0 hover:bg-gray-100 hover:text-gray-600 border border-gray-200 bg-white"
-          title="Code Block"
-        >
-          <Code className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleLink}
-          className="h-9 w-9 p-0 hover:bg-purple-100 hover:text-purple-600 border border-gray-200 bg-white"
-          title="Link"
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleImage}
-          className="h-9 w-9 p-0 hover:bg-purple-100 hover:text-purple-600 border border-gray-200 bg-white"
-          title="Image"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleEmoji}
-          className="h-9 w-9 p-0 hover:bg-yellow-100 hover:text-yellow-600 border border-gray-200 bg-white"
-          title="Emoji"
-        >
-          <Smile className="h-4 w-4" />
-        </Button>
-
-        <div className="w-px h-6 bg-gray-300 mx-2" />
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 hover:bg-orange-100 hover:text-orange-600 border border-gray-200 bg-white"
-          title="Align Left"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 hover:bg-orange-100 hover:text-orange-600 border border-gray-200 bg-white"
-          title="Align Center"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 hover:bg-orange-100 hover:text-orange-600 border border-gray-200 bg-white"
-          title="Align Right"
-        >
-          <AlignRight className="h-4 w-4" />
         </Button>
 
         <div className="flex-1" />

@@ -15,25 +15,25 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
     try {
-        const { userId, type, questionId } = body;
+        const { userId, type, postId } = body;
 
-        const question = await db.question.findUnique({
+        const post = await db.post.findUnique({
             where: {
-                id: questionId
+                id: postId
             }
         });
 
         let message;
-        if (type === "QUESTION_POSTED") {
-            message = "Your question has been successfully posted!";
-        } else if (type === "ANSWER_RECEIVED") {
-            message = `Someone has commented on your question: ${question?.title}`; 
+        if (type === "POST_CREATED") {
+            message = "Your post has been successfully created!";
+        } else if (type === "COMMENT_RECEIVED") {
+            message = `Someone has commented on your post: ${post?.title}`; 
         }
 
         const notification = await db.notification.create({
             data: {
                 userId: userId,
-                questionId: questionId,
+                postId: postId,
                 type: type,
                 message: message!
             }

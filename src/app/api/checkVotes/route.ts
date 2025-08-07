@@ -17,12 +17,12 @@ export const POST = async (req: NextRequest) => {
 
     const { slug } = body;
     try {
-        const question = await db.question.findUnique({
+        const post = await db.post.findUnique({
             where: {
                 slug: slug
             },
             include: {
-                answers: {
+                comments: {
                     include: {
                         votes: true
                     }
@@ -30,16 +30,16 @@ export const POST = async (req: NextRequest) => {
             }
         });
 
-        const answerIds: {
-            answerId: string;
+        const commentIds: {
+            commentId: string;
             value: number;
         }[] = [];
-        question?.answers.map((answer) => {
-            answer.votes.map((vote) => {
+        post?.comments.map((comment) => {
+            comment.votes.map((vote) => {
                 if (vote.userId === session.user.id) {
-                    answerIds.push(
+                    commentIds.push(
                         {
-                            answerId: answer.id,
+                            commentId: comment.id,
                             value: vote.value
                         }
                     )
@@ -47,8 +47,8 @@ export const POST = async (req: NextRequest) => {
             })
         })
 
-        return NextResponse.json({ answerIds }, { status: 201 });
+        return NextResponse.json({ commentIds: commentIds }, { status: 201 });
     } catch (error) {
-        return NextResponse.json({message: "Error fetching answerIds for votes"}, {status: 500});
+        return NextResponse.json({message: "Error fetching commentIds for votes"}, {status: 500});
     }
 }

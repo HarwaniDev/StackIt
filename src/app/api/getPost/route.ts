@@ -17,12 +17,12 @@ export const POST = async (req: NextRequest) => {
 
     const { slug, page } = body;
     try {
-        const question = await db.question.findUnique({
+        const post = await db.post.findUnique({
             where: {
                 slug
             },
             include: {
-                answers: {
+                comments: {
                     include: {
                         votes: true,
                         author: {
@@ -47,18 +47,18 @@ export const POST = async (req: NextRequest) => {
             }
         });
        
-        const tagsInQuestion: string[] = [];
-        question?.tags.map((tag) => {
-            tagsInQuestion.push(tag.tag.name)
+        const tagsInPost: string[] = [];
+        post?.tags.map((tag) => {
+            tagsInPost.push(tag.tag.name)
         })
 
         const author = await db.user.findFirst({
             where: {
-                id: question?.authorId
+                id: post?.authorId
             }
         });
         
-        let answers: {
+        let comments: {
             id: string;
             createdAt: string;
             content: string;
@@ -67,43 +67,44 @@ export const POST = async (req: NextRequest) => {
             votes: number;
         }[] = []
 
-        question?.answers.map((answer) => {
-            answers.push({
-                id: answer.id,
-                createdAt: new Date(answer.createdAt).toLocaleDateString(),
-                content: answer.content,
-                authorName: answer.author.name ?? "",
-                votes: answer.votes.length,
-                authorId: answer.authorId
+        post?.comments.map((comment) => {
+            comments.push({
+                id: comment.id,
+                createdAt: new Date(comment.createdAt).toLocaleDateString(),
+                content: comment.content,
+                authorName: comment.author.name ?? "",
+                votes: comment.votes.length,
+                authorId: comment.authorId
             })
         })
         
-        const totalAnswers = await db.answer.count({
+        const totalComments = await db.comment.count({
             where: {
-                question: {
+                post: {
                     slug: slug
                 }
             }
         })
 
         const name = author?.name;
-        const isoString = question?.createdAt;
+        const isoString = post?.createdAt;
         const date = new Date(isoString!).toLocaleDateString();
         
         const response = {
-            title: question?.title,
-            description: question?.description,
+            postId: post?.id,
+            title: post?.title,
+            description: post?.description,
             createdAt: date,
-            tagsInQuestion,
-            answers,
-            totalAnswers,
+            tagsInPost,
+            comments,
+            totalComments,
             name,
-            questionAuthorId: question?.authorId,
+            postAuthorId: post?.authorId,
         }
 
         return NextResponse.json(response, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch the question" }, { status: 500 })
+        return NextResponse.json({ error: "Failed to fetch the post" }, { status: 500 })
     }
 
 

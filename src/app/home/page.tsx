@@ -6,65 +6,91 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Bell, MessageSquare } from "lucide-react"
+import { Pagination } from "@/components/ui/pagination"
+import { Search, MessageSquare } from "lucide-react"
 import Link from "next/link"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { signIn, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Header from "@/components/Header";
-
-const mockQuestions = [
-    {
-        id: 1,
-        title: "How to join 2 columns in a data set to make a separate column in SQL",
-        description:
-            "I do not know the code for it as I am a beginner. As an example what I need to do is like there is a column 1 containing First name, and column 2 consists of last name I want a column to combine...",
-        tags: ["SQL", "Database"],
-        votes: 5,
-        answers: 3,
-        username: "User Name",
-        timeAgo: "2 hours ago",
-    },
-    {
-        id: 2,
-        title: "React useState not updating immediately",
-        description:
-            "I'm having trouble with useState not updating the state immediately when I call the setter function. The component doesn't re-render with the new value...",
-        tags: ["React", "JavaScript", "Hooks"],
-        votes: 8,
-        answers: 2,
-        username: "DevUser123",
-        timeAgo: "4 hours ago",
-    },
-    {
-        id: 3,
-        title: "Best practices for JWT token storage",
-        description:
-            "What are the security implications of storing JWT tokens in localStorage vs cookies? I want to implement authentication in my web app...",
-        tags: ["JWT", "Security", "Authentication"],
-        votes: 12,
-        answers: 5,
-        username: "SecureDev",
-        timeAgo: "1 day ago",
-    },
-]
+import axios from "axios"
 
 export default function HomePage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [filter, setFilter] = useState("newest")
-    const [notificationCount, setNotificationCount] = useState(3)
-
+    const [notifications, setNotifications] = useState<{
+        message: string;
+        createdAt: string;
+        slug: string;
+    }[]>([]);
+    const [notificationCount, setNotificationCount] = useState(0)
+    const [posts, setPosts] = useState<{
+        slug: string;
+        title: string;
+        description: string;
+        createdAt: string;
+        author: string;
+        tags: string[];
+        commentsCount: number;
+    }[]>([]);
+    const [currentPage, setCurrentPage] = useState(1)
+    const [totalPosts, setTotalPosts] = useState(0);
     const session = useSession();
     const router = useRouter();
 
+    useEffect(() => {
+        async function getAllPosts() {
+            const response = await axios.get("/api/getAllPosts");
+            setPosts(response.data.postsResponse);
+            setTotalPosts(response.data.totalPosts);
+        }
 
+        async function getNotificationData() {
+            const response = await axios.get("/api/getNotifications");
+            setNotifications(response.data);
+            setNotificationCount(response.data.length);
+        }
+
+        Promise.all([getAllPosts(), getNotificationData()]).catch((err) => {
+            console.error('Error loading post data:', err);
+        })
+    }, [])
+
+    const handleDeleteNotifications = async () => {
+        await axios.get("/api/deleteNotifications");
+    }
+
+    function sortByUnCommented() {
+        const sortedPosts = [...posts].sort((a, b) => {
+            return a.commentsCount - b.commentsCount
+        });
+        setPosts(sortedPosts);
+    }
+
+    function sortByNewest() {
+        const sortedPosts = [...posts].sort((a, b) => {
+            const [dayA, monthA, yearA] = a.createdAt.split('/').map(Number);
+            const [dayB, monthB, yearB] = b.createdAt.split('/').map(Number);
+
+            const dateA = new Date(yearA!, monthA! - 1, dayA);
+            const dateB = new Date(yearB!, monthB! - 1, dayB);
+
+            return dateB.getTime() - dateA.getTime();
+        });
+        setPosts(sortedPosts)
+    }
+    
     return (
         <div className="min-h-screen bg-white">
             {/* Header */}
             <Header
-                session={session.data}
+                session={session}
                 notificationCount={notificationCount}
+                notifications={notifications}
+                onClearNotifications={() => {
+                    handleDeleteNotifications();
+                    setNotifications([]);
+                    setNotificationCount(0);
+                }}
                 onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/home" })}
             />
 
@@ -77,14 +103,22 @@ export default function HomePage() {
                             <div className="flex-1 relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                                 <Input
-                                    placeholder="Search questions..."
+                                    placeholder="Search posts..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-10 bg-white text-black border-gray-300 placeholder:text-gray-500"
                                 />
                             </div>
                             <div className="flex gap-2">
-                                <Select value={filter} onValueChange={setFilter}>
+                                <Select value={filter} onValueChange={(value) => {
+                                    setFilter(value);
+                                    if (value === "uncommented") {
+                                        sortByUnCommented();
+                                    }
+                                    if (value === "newest") {
+                                        sortByNewest();
+                                    }
+                                }}>
                                     <SelectTrigger className="w-32 bg-white text-black border-gray-300">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -92,96 +126,98 @@ export default function HomePage() {
                                         <SelectItem value="newest" className="bg-white text-black hover:bg-gray-50">
                                             Newest
                                         </SelectItem>
-                                        <SelectItem value="unanswered" className="bg-white text-black hover:bg-gray-50">
-                                            Unanswered
-                                        </SelectItem>
-                                        <SelectItem value="most-voted" className="bg-white text-black hover:bg-gray-50">
-                                            Most Voted
+                                        <SelectItem value="uncommented" className="bg-white text-black hover:bg-gray-50">
+                                            Uncommented
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                    <Button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white" onClick={() => {
-                                        session.status === "unauthenticated" ? signIn("google", {callbackUrl: "http://localhost:3000/ask"}) : router.push("/ask"); 
-                                    }}>
-                                        Ask New Question
-                                    </Button>
+                                <Button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white" onClick={() => {
+                                    session.status === "unauthenticated" ? signIn("google", { callbackUrl: "http://localhost:3000/ask" }) : router.push("/ask");
+                                }}>
+                                    Share Interview Experience
+                                </Button>
                             </div>
                         </div>
 
-                        {/* Questions List */}
+                        {/* Posts List */}
                         <div className="space-y-4">
-                            {mockQuestions.map((question) => (
-                                <Card key={question.id} className="hover:shadow-md transition-shadow bg-white border border-gray-200">
-                                    <CardContent className="p-6 bg-white">
-                                        <div className="flex gap-4">
-                                            {/* Vote Count */}
-                                            <div className="flex flex-col items-center gap-1 min-w-[60px]">
-                                                <div className="text-lg font-semibold text-blue-600 bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center">
-                                                    {question.votes}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">votes</div>
-                                                <div className="flex items-center gap-1 text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                                    <MessageSquare className="h-3 w-3" />
-                                                    {question.answers}
-                                                </div>
-                                            </div>
-
-                                            {/* Question Content */}
-                                            <div className="flex-1">
-                                                <Link href={`/question/${question.id}`}>
-                                                    <h3 className="text-lg font-semibold hover:text-primary cursor-pointer mb-2 text-black">
-                                                        {question.title}
-                                                    </h3>
-                                                </Link>
-                                                <p className="text-gray-700 mb-3 line-clamp-2">{question.description}</p>
-                                                <div className="flex flex-wrap gap-2 mb-3">
-                                                    {question.tags.map((tag, index) => (
-                                                        <Badge
-                                                            key={tag}
-                                                            className={`text-xs text-white ${index % 4 === 0
-                                                                ? "bg-purple-500 hover:bg-purple-600"
-                                                                : index % 4 === 1
-                                                                    ? "bg-blue-500 hover:bg-blue-600"
-                                                                    : index % 4 === 2
-                                                                        ? "bg-green-500 hover:bg-green-600"
-                                                                        : "bg-orange-500 hover:bg-orange-600"
-                                                                }`}
-                                                        >
-                                                            {tag}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                                <div className="flex items-center justify-between text-sm text-gray-600">
-                                                    <span>asked by {question.username}</span>
-                                                    <span>{question.timeAgo}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                            {posts && (
+                                posts.filter((post) =>
+                                    searchQuery.trim() === "" ||
+                                    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    post.description.toLowerCase().includes(searchQuery.toLowerCase())
+                                ).length === 0 ? (
+                                    <div className="text-center text-gray-500 py-8">No results found.</div>
+                                ) : (
+                                    posts
+                                        .filter((post) =>
+                                            searchQuery.trim() === "" ||
+                                            post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            post.description.toLowerCase().includes(searchQuery.toLowerCase())
+                                        )
+                                        .map((post, index) => (
+                                            <Card key={index} className="hover:shadow-md transition-shadow bg-white border-green-500">
+                                                <CardContent className="p-6 bg-white">
+                                                    <div className="flex flex-col">
+                                                        {/* Post Content */}
+                                                        <div className="flex-1 flex flex-col">
+                                                            <Link href={`/post/${post.slug}`}>
+                                                                <h3 className="text-lg font-semibold hover:text-primary cursor-pointer mb-2 text-black">
+                                                                    {post.title}
+                                                                </h3>
+                                                            </Link>
+                                                            <p className="text-gray-700 mb-3 line-clamp-2">{post.description}</p>
+                                                            {/* Post Stats */}
+                                                            <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4 text-green-600" />
+                                                                    <span>{post.commentsCount} comments</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                                {post.tags.map((tag, index) => (
+                                                                    <Badge
+                                                                        key={tag}
+                                                                        className={`text-xs text-white ${index % 4 === 0
+                                                                            ? "bg-purple-500 hover:bg-purple-600"
+                                                                            : index % 4 === 1
+                                                                                ? "bg-blue-500 hover:bg-blue-600"
+                                                                                : index % 4 === 2
+                                                                                    ? "bg-green-500 hover:bg-green-600"
+                                                                                    : "bg-orange-500 hover:bg-orange-600"
+                                                                            }`}
+                                                                    >
+                                                                        {tag}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-sm text-gray-600 mt-4 pt-4 border-t border-gray-100">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                                                {post.author.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span>posted by <span className="font-medium text-gray-800">{post.author}</span></span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-gray-500">•</span>
+                                                            <span className="font-medium">{post.createdAt}</span>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))
+                                )
+                            )}
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center mt-8">
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" disabled className="bg-white text-black border-gray-300">
-                                    Previous
-                                </Button>
-                                <Button variant="outline" size="sm" className="bg-blue-600 text-white border-blue-600">
-                                    1
-                                </Button>
-                                <Button variant="outline" size="sm" className="bg-white text-black border-gray-300 hover:bg-gray-50">
-                                    2
-                                </Button>
-                                <Button variant="outline" size="sm" className="bg-white text-black border-gray-300 hover:bg-gray-50">
-                                    3
-                                </Button>
-                                <Button variant="outline" size="sm" className="bg-white text-black border-gray-300 hover:bg-gray-50">
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+                        <Pagination
+                            totalPages={Math.ceil(totalPosts / 10)}
+                            currentPage={currentPage}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
 
                     {/* Sidebar */}

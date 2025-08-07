@@ -14,7 +14,7 @@ export const GET = async () => {
                 userId: session.user.id
             },
             include: {
-                question: {
+                post: {
                     select: {
                         slug: true
                     }
@@ -25,7 +25,7 @@ export const GET = async () => {
         const response = notifications.map((notification) => ({
             message: notification.message,
             createdAt: new Date(notification.createdAt).toLocaleDateString("en-IN"),
-            slug: notification.question?.slug
+            slug: notification.post?.slug
         }));
 
         return NextResponse.json(response, { status: 201 });

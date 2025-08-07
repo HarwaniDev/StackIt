@@ -15,14 +15,14 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { userId, answerId, voteType } = body;
+    const { userId, commentId, voteType } = body;
 
     try {
         const vote = await db.vote.findUnique({
             where: {
-                userId_answerId: {
+                userId_commentId: {
                     userId: userId,
-                    answerId: answerId
+                    commentId: commentId
                 }
             }
         });
@@ -30,9 +30,9 @@ export const POST = async (req: NextRequest) => {
         if (voteType == "1" || voteType == "-1") {
             await db.vote.upsert({
                 where: {
-                    userId_answerId: {
+                    userId_commentId: {
                         userId: userId,
-                        answerId: answerId
+                        commentId: commentId
                     }
                 },
                 update: {
@@ -40,16 +40,16 @@ export const POST = async (req: NextRequest) => {
                 },
                 create: {
                     userId: userId,
-                    answerId: answerId,
+                    commentId: commentId,
                     value: voteType
                 }
             })
         } else if (vote && voteType == "0") {
             await db.vote.delete({
                 where: {
-                    userId_answerId: {
+                    userId_commentId: {
                         userId: userId,
-                        answerId: answerId
+                        commentId: commentId
                     }
                 }
             })

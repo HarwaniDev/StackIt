@@ -46,7 +46,7 @@ export const POST = async (req: Request) => {
       })
     );
 
-    const question = await db.question.create({
+    const post = await db.post.create({
       data: {
         title,
         description,
@@ -62,9 +62,9 @@ export const POST = async (req: Request) => {
       },
     });
 
-    return NextResponse.json(question, { status: 201 });
+    return NextResponse.json(post, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Failed to create question" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
   }
 };

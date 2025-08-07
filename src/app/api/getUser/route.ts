@@ -7,14 +7,12 @@ export const GET = async () => {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   const user = await db.user.findUnique({
     where: { id: session.user.id },
     include: {
-      questions: true,
-      answers: true,
-      votes: true,
+      posts: true,
       comments: true,
+      votes: true,
       notifications: true,
       mentionedBy: true,
       mentions: true,

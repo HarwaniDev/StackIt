@@ -22,25 +22,26 @@ export const POST = async (req: NextRequest) => {
     }
 
     try {
-        const question = await db.question.findUnique({
+        const post = await db.post.findUnique({
             where: {
                 slug
             }
         });
 
         // TODO :- correct ?? here
-        const answer = await db.answer.create({
+        const comment = await db.comment.create({
             data: {
                 content: content,
-                questionId: question?.id ?? "",
+                postId: post?.id ?? "",
                 authorId: session.user.id
             },
             include: {
                 votes: true,
             }
         });
-        return NextResponse.json(answer, { status: 201 });
+        // todo:- send only required data to fe
+        return NextResponse.json(comment, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to add answer" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to add comment" }, { status: 500 });
     }
 }

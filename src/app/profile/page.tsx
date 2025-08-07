@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import Header from "@/components/Header";
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 
 const mockUserData = {
     name: "John Doe",
@@ -77,7 +78,7 @@ export default function ProfilePage() {
     const [bioText, setBioText] = useState(userData.bio)
     const [notificationCount] = useState(3)
     const [bio, setBio] = useState("");
-    const [questionsByUser, setQuestionsByUser] = useState([]);
+    const [questionsByUser, setQuestionsByUser] = useState<any>([]);
     const [answersByUser, setAnswersByUser] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [userCreated, setUserCreated] = useState();
@@ -117,13 +118,28 @@ export default function ProfilePage() {
         );
     }
 
+    useEffect(() => {
+        async function getUserInfo() {
+            const response = await axios.get("/api/getUser");
+            const user = response.data;
+            setBio(user.bio);
+            setNotifications(user.notifications);
+            setAnswersByUser(user.answers);
+            setQuestionsByUser(user.questions);
+
+            console.log(user.questions);
+            
+        }
+        getUserInfo()
+    }, [])
+
     return (
         <div className="min-h-screen bg-white">
             {session.status !== "loading" &&
                 <div>
                     {/* Header */}
                     <Header
-                        session={session.data}
+                        session={session}
                         notificationCount={notificationCount}
                         onSignOut={() => { signOut({ callbackUrl: "/home" }) }}
                     />
@@ -137,7 +153,7 @@ export default function ProfilePage() {
                                         <CardContent className="p-6 bg-white">
                                             <div className="flex flex-col items-center text-center">
                                                 <Avatar className="h-24 w-24 mb-4">
-                                                    <img src={`${session.data?.user.image}`} />
+                                                    <img src={session.data?.user.image ?? ""} />
                                                 </Avatar>
                                                 <h1 className="text-2xl font-bold text-black mb-2">{session.data?.user.name}</h1>
                                                 <p className="text-gray-600 mb-4">{session.data?.user.email}</p>
@@ -232,7 +248,7 @@ export default function ProfilePage() {
                                         </CardHeader>
                                         <CardContent className="bg-white">
                                             <div className="space-y-4">
-                                                {mockRecentQuestions.map((question) => (
+                                                {questionsByUser.map((question: any) => (
                                                     <div key={question.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                                                         <Link href={`/question/${question.id}`}>
                                                             <h3 className="text-lg font-medium text-black hover:text-blue-600 cursor-pointer mb-2">

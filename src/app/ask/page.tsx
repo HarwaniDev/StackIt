@@ -14,7 +14,7 @@ import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
-export default function AskQuestionPage() {
+export default function AddPostPage() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [tags, setTags] = useState<string[]>([])
@@ -64,35 +64,38 @@ export default function AskQuestionPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-    // console.log({ title, description, tags })
-
-    const response = await axios.post("/api/addQuestion", {
+    e.preventDefault();
+    const response = await axios.post("/api/addPost", {
       title,
       description,
       tags
     });
-    const question = response.data;
-    router.push(`/question/${question.slug}`);
+    const post = response.data;
+
+    await axios.post("/api/addNotification", {
+      userId: post.authorId,
+      postId: post.id,
+      type: "POST_CREATED"
+    })
+    router.push(`/post/${post.slug}`);
   }
 
   return (
-    
+
     <div className="min-h-screen bg-white">
-    
+
       {/* Header */}
       <Header
         session={session}
         notificationCount={notificationCount}
-        onSignOut={() => {signOut({callbackUrl: "http://localhost:3000/home"})}}
+        onSignOut={() => { signOut({ callbackUrl: "http://localhost:3000/home" }) }}
       />
-      
+
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
           <Card className="bg-white">
             <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50">
-              <CardTitle className="text-2xl text-gray-800">Ask a Question</CardTitle>
+              <CardTitle className="text-2xl text-gray-800">Share Your Interview Experience</CardTitle>
             </CardHeader>
             <CardContent className="bg-white">
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -103,7 +106,7 @@ export default function AskQuestionPage() {
                   </Label>
                   <Input
                     id="title"
-                    placeholder="Be specific and imagine you're asking a question to another person"
+                    placeholder="Give your post a clear, descriptive title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -118,7 +121,7 @@ export default function AskQuestionPage() {
                   <RichTextEditor
                     value={description}
                     onChange={setDescription}
-                    placeholder="Include all the information someone would need to answer your question"
+                    placeholder="Share your interview experience in detail..."
                   />
                 </div>
 
@@ -141,15 +144,14 @@ export default function AskQuestionPage() {
                         {tags.map((tag, index) => (
                           <Badge
                             key={tag}
-                            className={`flex items-center gap-1 text-white ${
-                              index % 4 === 0
-                                ? "bg-purple-500"
-                                : index % 4 === 1
-                                  ? "bg-blue-500"
-                                  : index % 4 === 2
-                                    ? "bg-green-500"
-                                    : "bg-orange-500"
-                            }`}
+                            className={`flex items-center gap-1 text-white ${index % 4 === 0
+                              ? "bg-purple-500"
+                              : index % 4 === 1
+                                ? "bg-blue-500"
+                                : index % 4 === 2
+                                  ? "bg-green-500"
+                                  : "bg-orange-500"
+                              }`}
                           >
                             {tag}
                             <X className="h-3 w-3 cursor-pointer hover:text-red-200" onClick={() => removeTag(tag)} />
@@ -167,7 +169,7 @@ export default function AskQuestionPage() {
                     size="lg"
                     className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
                   >
-                    Submit Question
+                    Submit Post
                   </Button>
                 </div>
               </form>
