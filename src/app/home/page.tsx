@@ -34,6 +34,9 @@ export default function HomePage() {
     }[]>([]);
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPosts, setTotalPosts] = useState(0);
+    const [tags, setTags] = useState<{
+        name: string
+    }[]>([]);
     const session = useSession();
     const router = useRouter();
 
@@ -50,7 +53,14 @@ export default function HomePage() {
             setNotificationCount(response.data.length);
         }
 
-        Promise.all([getAllPosts(), getNotificationData()]).catch((err) => {
+        async function getTags() {
+            const response = await axios.get("/api/getTags");
+            setTags(response.data);
+            console.log(response.data);
+            
+        }
+
+        Promise.all([getAllPosts(), getNotificationData(), getTags()]).catch((err) => {
             console.error('Error loading post data:', err);
         })
     }, [])
@@ -78,7 +88,7 @@ export default function HomePage() {
         });
         setPosts(sortedPosts)
     }
-    
+
     return (
         <div className="min-h-screen bg-white">
             {/* Header */}
@@ -228,13 +238,13 @@ export default function HomePage() {
                             </CardHeader>
                             <CardContent className="bg-white">
                                 <div className="flex flex-wrap gap-2">
-                                    {["React", "JavaScript", "SQL", "Python", "Node.js", "CSS", "HTML", "JWT"].map((tag) => (
+                                    {tags.map((tag, index) => (
                                         <Badge
-                                            key={tag}
+                                            key={index}
                                             variant="outline"
                                             className="cursor-pointer hover:bg-secondary bg-white text-black border-gray-300"
                                         >
-                                            {tag}
+                                            {tag.name}
                                         </Badge>
                                     ))}
                                 </div>
