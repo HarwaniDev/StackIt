@@ -19,7 +19,12 @@ export default function AddPostPage() {
   const [description, setDescription] = useState("")
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
-  const [notificationCount] = useState(3)
+  const [notifications, setNotifications] = useState<{
+    message: string;
+    createdAt: string;
+    slug: string;
+  }[]>([]);
+  const [notificationCount, setNotificationCount] = useState(0)
   const session = useSession();
   const router = useRouter();
 
@@ -30,6 +35,14 @@ export default function AddPostPage() {
         router.push("/api/auth/signin?callbackUrl=/ask");
       }, 2000);
       return () => clearTimeout(timeout);
+    } else {
+      async function getNotificationData() {
+        const response = await axios.get("/api/getNotifications");
+        setNotifications(response.data);
+        setNotificationCount(response.data.length);
+      }
+
+      getNotificationData();
     }
   }, [session.status, router]);
 
@@ -53,7 +66,8 @@ export default function AddPostPage() {
   }
 
   const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove))
+    const updatedTags = tags.filter((tag) => tag !== tagToRemove)
+    setTags(updatedTags);
   }
 
   const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
@@ -88,6 +102,7 @@ export default function AddPostPage() {
       <Header
         session={session}
         notificationCount={notificationCount}
+        notifications={notifications}
         onSignOut={() => { signOut({ callbackUrl: "http://localhost:3000/home" }) }}
       />
 
@@ -154,7 +169,9 @@ export default function AddPostPage() {
                               }`}
                           >
                             {tag}
-                            <X className="h-3 w-3 cursor-pointer hover:text-red-200" onClick={() => removeTag(tag)} />
+                            <button onClick={() => removeTag(tag)}>
+                              <X className="h-3 w-3 cursor-pointer hover:text-red-200" />
+                            </button>
                           </Badge>
                         ))}
                       </div>
