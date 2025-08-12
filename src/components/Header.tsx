@@ -27,11 +27,11 @@ interface HeaderProps {
 
 export default function Header({ session, notificationCount = 0, notifications = [], onClearNotifications, onSignIn, onSignOut, children }: HeaderProps) {
   return (
-    <header className="border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+    <header className="border-b bg-white text-black">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-2xl font-bold text-white hover:text-blue-100">
+            <Link href="/" className="text-2xl font-bold text-black hover:opacity-80">
               StackIt
             </Link>
             {children}
@@ -40,7 +40,7 @@ export default function Header({ session, notificationCount = 0, notifications =
             <div className="flex items-center gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20">
+                  <Button variant="ghost" size="icon" className="relative text-black hover:bg-gray-100 cursor-pointer">
                     <Bell className="h-5 w-5" />
                     {notificationCount > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-red-500 text-white">
@@ -69,7 +69,7 @@ export default function Header({ session, notificationCount = 0, notifications =
                         </DropdownMenuItem>
                       ))}
                       <DropdownMenuItem className="bg-white hover:bg-gray-50 flex justify-center">
-                        <Button variant="outline" className="w-full" onClick={onClearNotifications}>
+                        <Button variant="outline" className="w-full cursor-pointer" onClick={onClearNotifications}>
                           Clear All
                         </Button>
                       </DropdownMenuItem>
@@ -79,23 +79,23 @@ export default function Header({ session, notificationCount = 0, notifications =
               </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                    <Avatar className="h-8 w-8 ring-2 ring-white/30">
+                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 cursor-pointer">
+                    <Avatar className="h-8 w-8 ring-2 ring-gray-300">
                       <img src={session.data.user.image ?? ""} alt="" />
                       {/* <AvatarFallback className="bg-orange-500 text-white">{session.user.name ? session.user.name[0] : ""}</AvatarFallback> */}
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white">
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black">
+                <DropdownMenuContent align="end" className="bg-white ">
+                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black cursor-pointer">
                     <Link href="/profile">Profile</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black" onClick={onSignOut}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black cursor-pointer" onClick={onSignOut}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           ) : (
-            <Button variant="ghost" className="text-white hover:bg-white/20" onClick={onSignIn}>
+            <Button variant="ghost" className="text-black hover:bg-gray-100" onClick={onSignIn}>
               Sign In
             </Button>
           )}

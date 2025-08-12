@@ -124,7 +124,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           variant="ghost"
           size="sm"
           onClick={() => setIsPreview(!isPreview)}
-          className="h-9 px-3 hover:bg-blue-100 hover:text-blue-600 border border-gray-200 bg-white text-sm"
+          className="h-9 px-3 hover:bg-black hover:text-white border border-gray-200 bg-white text-sm cursor-pointer"
         >
           {isPreview ? "Edit" : "Preview"}
         </Button>
