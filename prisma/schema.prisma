@@ -46,10 +46,6 @@ model User {
   votes        Vote[]
   notifications Notification[]
 
-  // Self-referential relations for mentions
-  mentionedBy User[] @relation("UserMentions")
-  mentions    User[] @relation("UserMentions")
-
   @@map("users")
 }
 
