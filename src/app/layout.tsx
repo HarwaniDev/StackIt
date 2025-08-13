@@ -8,8 +8,8 @@ import { Providers } from "./providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "StackIt - Q&A Platform",
-  description: "A minimal question-and-answer platform for collaborative learning",
+  title: "StackIt",
+  description: "The platform for sharing and discovering real interview experiences"
 }
 
 export default function RootLayout({

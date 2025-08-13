@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { ChevronUp, ChevronDown, Bell, Check } from "lucide-react"
+import { ChevronUp, ChevronDown, Bell, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import RichTextEditor from "@/components/rich-text-editor"
 import Header from "@/components/Header";
@@ -39,6 +39,8 @@ export default function PostDetailPage() {
     createdAt: string;
     slug: string;
   }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleVote = async (commentId: string, voteType: "up" | "down") => {
     const currentVote = userVotes[commentId]
@@ -71,92 +73,145 @@ export default function PostDetailPage() {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true);
 
-    const [response, response2] = await Promise.all([
-      // Handle comment submission
-      axios.post("/api/addComment", {
+    try {
+      const [response, _] = await Promise.all([
+        // Handle comment submission
+        axios.post("/api/addComment", {
+          content: commentContent,
+          slug: slug
+        }),
+
+        // handle adding notification
+        axios.post("/api/addNotification", {
+          userId: postAuthorId,
+          postId: postId,
+          type: "COMMENT_RECEIVED"
+        })
+      ]);
+      // Get the current user's name for the new comment
+      const currentUser = session.data?.user;
+
+      // Create a new comment object with the same structure as the existing comments
+      const newComment = {
+        id: response.data.id,
+        createdAt: new Date().toLocaleDateString(),
         content: commentContent,
-        slug: slug
-      }),
+        authorName: currentUser?.name ?? "",
+        authorId: currentUser?.id ?? "",
+        votes: 0,
+      };
 
-      // handle adding notification
-      axios.post("/api/addNotification", {
-        userId: postAuthorId,
-        postId: postId,
-        type: "COMMENT_RECEIVED"
-      })
-    ]);
-    // Get the current user's name for the new comment
-    const currentUser = session.data?.user;
-
-    // Create a new comment object with the same structure as the existing comments
-    const newComment = {
-      id: response.data.id,
-      createdAt: new Date().toLocaleDateString(),
-      content: commentContent,
-      authorName: currentUser?.name ?? "",
-      authorId: currentUser?.id ?? "",
-      votes: 0,
-    };
-
-    setComments((prev) => [...prev, newComment]);
-    setVoteCount((prev) => ({ ...prev, [response.data.id]: 0 }));
-    setCommentContent("");
+      setComments((prev) => [...prev, newComment]);
+      setVoteCount((prev) => ({ ...prev, [response.data.id]: 0 }));
+      setCommentContent("");
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
     async function getPost() {
-      const response = await axios.post("/api/getPost", {
-        slug: slug,
-        page: page
-      });
-      setPostId(response.data.postId);
-      setPostContent(response.data.description);
-      setPostTitle(response.data.title);
-      setCreatedAt(response.data.createdAt);
-      setPostTags(response.data.tagsInPost);
-      setComments(response.data.comments);
-      setPostAuthor(response.data.name);
-      setPostAuthorId(response.data.postAuthorId);
-      setTotalComments(response.data.totalComments);
+      try {
+        const response = await axios.post("/api/getPost", {
+          slug: slug,
+          page: page
+        });
+        setPostId(response.data.postId);
+        setPostContent(response.data.description);
+        setPostTitle(response.data.title);
+        setCreatedAt(response.data.createdAt);
+        setPostTags(response.data.tagsInPost);
+        setComments(response.data.comments);
+        setPostAuthor(response.data.name);
+        setPostAuthorId(response.data.postAuthorId);
+        setTotalComments(response.data.totalComments);
 
-      const voteCounts = response.data.comments.reduce((acc: any, comment: any) => {
-        acc[comment.id] = comment.votes;
-        return acc;
-      }, {});
+        const voteCounts = response.data.comments.reduce((acc: any, comment: any) => {
+          acc[comment.id] = comment.votes;
+          return acc;
+        }, {});
 
-      setVoteCount(voteCounts);
+        setVoteCount(voteCounts);
+      } catch (error) {
+        console.error('Error loading post:', error);
+      }
     }
 
     async function getVotesData() {
-      const response = await axios.post("/api/checkVotes", {
-        slug
-      });
+      try {
+        const response = await axios.post("/api/checkVotes", {
+          slug
+        });
 
-      response.data.commentIds.map((vote: any) => {
-        let voteType: string;
-        if (vote.value === 1) {
-          voteType = "up"
-        } else {
-          voteType = "down"
-        }
-        const commentId = vote.commentId
-        setUserVotes((prev) => ({ ...prev, [commentId]: voteType }))
-      })
+        response.data.commentIds.map((vote: any) => {
+          let voteType: string;
+          if (vote.value === 1) {
+            voteType = "up"
+          } else {
+            voteType = "down"
+          }
+          const commentId = vote.commentId
+          setUserVotes((prev) => ({ ...prev, [commentId]: voteType }))
+        })
+      } catch (error) {
+        console.error('Error loading votes:', error);
+      }
     }
 
     async function getNotificationData() {
-      const response = await axios.get("/api/getNotifications");
-      setNotifications(response.data);
-      setNotificationCount(response.data.length);
+      try {
+        const response = await axios.get("/api/getNotifications");
+        setNotifications(response.data);
+        setNotificationCount(response.data.length);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
     }
-    Promise.all([getPost(), getVotesData(), getNotificationData()]).catch(error => {
-      console.error('Error loading post data:', error);
-    });
+    
+    setIsLoading(true);
+    Promise.all([getPost(), getVotesData(), getNotificationData()])
+      .catch(error => {
+        console.error('Error loading post data:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [page]);
 
   const handleDeleteNotifications = async () => {
     await axios.get("/api/deleteNotifications");
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header
+          session={session}
+          notificationCount={notificationCount}
+          notifications={notifications}
+          onClearNotifications={() => {
+            handleDeleteNotifications();
+            setNotifications([]);
+            setNotificationCount(0);
+          }}
+          onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
+        />
+        <div className="container mx-auto px-4 py-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-center py-20">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="text-lg">Loading post...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -182,18 +237,8 @@ export default function PostDetailPage() {
               <h1 className="text-2xl font-bold mb-4 text-black">{postTitle}</h1>
 
               <div className="flex flex-wrap gap-2 mb-4">
-                {postTags.map((tag, index) => (
-                  <Badge
-                    key={tag}
-                    className={`text-white ${index % 4 === 0
-                      ? "bg-purple-500"
-                      : index % 4 === 1
-                        ? "bg-blue-500"
-                        : index % 4 === 2
-                          ? "bg-green-500"
-                          : "bg-orange-500"
-                      }`}
-                  >
+                {postTags.map((tag) => (
+                  <Badge key={tag} className="text-white bg-black">
                     {tag}
                   </Badge>
                 ))}
@@ -219,7 +264,7 @@ export default function PostDetailPage() {
 
             <div className="space-y-6">
               {comments.map((comment, index) => (
-                <Card key={index} className="border-green-500 bg-white">
+                <Card key={index} className="border border-gray-200 bg-white">
                   <CardContent className="p-6 bg-white">
                     <div className="flex gap-4">
                       {/* Vote Controls */}
@@ -259,7 +304,7 @@ export default function PostDetailPage() {
                         <span>commented by {comment.authorName}</span>
 
                         {comment.authorId === postAuthorId && (
-                          <Badge className="bg-blue-500 text-white text-xs">
+                          <Badge className="bg-black text-white text-xs">
                             OP
                           </Badge>
                         )}
@@ -291,10 +336,17 @@ export default function PostDetailPage() {
                 <div className="flex justify-end">
                   <Button
                     type="submit"
-                    disabled={!commentContent.trim()}
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white disabled:from-gray-400 disabled:to-gray-400"
+                    disabled={!commentContent.trim() || isSubmitting}
+                    className="bg-black text-white hover:bg-black/90 disabled:bg-gray-400 disabled:text-gray-600 cursor-pointer"
                   >
-                    Submit Comment
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Comment"
+                    )}
                   </Button>
                 </div>
               </form>

@@ -109,8 +109,8 @@ export default function AddPostPage() {
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
           <Card className="bg-white">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50">
-              <CardTitle className="text-2xl text-gray-800">Share Your Interview Experience</CardTitle>
+            <CardHeader className="bg-white border-b">
+              <CardTitle className="text-2xl text-black">Share Your Interview Experience</CardTitle>
             </CardHeader>
             <CardContent className="bg-white">
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -156,21 +156,14 @@ export default function AddPostPage() {
                     />
                     {tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {tags.map((tag, index) => (
+                        {tags.map((tag) => (
                           <Badge
                             key={tag}
-                            className={`flex items-center gap-1 text-white ${index % 4 === 0
-                              ? "bg-purple-500"
-                              : index % 4 === 1
-                                ? "bg-blue-500"
-                                : index % 4 === 2
-                                  ? "bg-green-500"
-                                  : "bg-orange-500"
-                              }`}
+                            className="flex items-center gap-1 bg-black text-white"
                           >
                             {tag}
-                            <button onClick={() => removeTag(tag)}>
-                              <X className="h-3 w-3 cursor-pointer hover:text-red-200" />
+                            <button type="button" onClick={() => removeTag(tag)}>
+                              <X className="h-3 w-3 cursor-pointer hover:text-white/80" />
                             </button>
                           </Badge>
                         ))}
@@ -184,7 +177,7 @@ export default function AddPostPage() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                    className="bg-black text-white hover:bg-black/90"
                   >
                     Submit Post
                   </Button>

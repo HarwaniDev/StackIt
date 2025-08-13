@@ -31,7 +31,7 @@ export default function Header({ session, notificationCount = 0, notifications =
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-2xl font-bold text-black hover:opacity-80">
+            <Link href="/home" className="text-2xl font-bold text-black hover:opacity-80">
               StackIt
             </Link>
             {children}

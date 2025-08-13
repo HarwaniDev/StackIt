@@ -11,11 +11,7 @@ export const GET = async () => {
     where: { id: session.user.id },
     include: {
       posts: true,
-      comments: true,
-      votes: true,
-      notifications: true,
-      mentionedBy: true,
-      mentions: true,
+      comments: true
     },
   });
 

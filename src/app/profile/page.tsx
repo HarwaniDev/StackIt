@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Edit, Save, X } from "lucide-react"
 import Link from "next/link"
 import { Avatar } from "@/components/ui/avatar"
@@ -13,86 +12,41 @@ import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
-const mockUserData = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    bio: "Full-stack developer with 5 years of experience in React, Node.js, and SQL. Love helping others learn programming!",
-    joinedDate: "January 2023",
-    questionsAsked: 12,
-    answersGiven: 34,
-    reputation: 1250,
-    tags: ["React", "JavaScript", "Node.js", "SQL", "Python"],
-}
+// Using real user data from /api/getUser
 
-const mockRecentQuestions = [
-    {
-        id: 1,
-        title: "How to optimize React component re-renders?",
-        votes: 8,
-        answers: 3,
-        timeAgo: "2 days ago",
-    },
-    {
-        id: 2,
-        title: "Best practices for Node.js error handling",
-        votes: 12,
-        answers: 5,
-        timeAgo: "1 week ago",
-    },
-    {
-        id: 3,
-        title: "SQL query performance optimization tips",
-        votes: 15,
-        answers: 7,
-        timeAgo: "2 weeks ago",
-    },
-]
+ 
 
-const mockRecentAnswers = [
-    {
-        id: 1,
-        questionTitle: "How to join 2 columns in a data set to make a separate column in SQL",
-        votes: 8,
-        isAccepted: true,
-        timeAgo: "1 hour ago",
-    },
-    {
-        id: 2,
-        questionTitle: "React useState not updating immediately",
-        votes: 5,
-        isAccepted: false,
-        timeAgo: "3 hours ago",
-    },
-    {
-        id: 3,
-        questionTitle: "Best practices for JWT token storage",
-        votes: 12,
-        isAccepted: true,
-        timeAgo: "1 day ago",
-    },
-]
+ 
 
 export default function ProfilePage() {
-    const [userData, setUserData] = useState(mockUserData)
+    const [user, setUser] = useState<any>(null)
     const [isEditingBio, setIsEditingBio] = useState(false)
-    const [bioText, setBioText] = useState(userData.bio)
-    const [notificationCount] = useState(3)
-    const [bio, setBio] = useState("");
-    const [questionsByUser, setQuestionsByUser] = useState<any>([]);
-    const [answersByUser, setAnswersByUser] = useState([]);
-    const [notifications, setNotifications] = useState([]);
-    const [userCreated, setUserCreated] = useState();
+    const [bioDraft, setBioDraft] = useState("")
+    const [posts, setPosts] = useState<any[]>([])
+    const [comments, setComments] = useState<any[]>([])
+    const [notifications, setNotifications] = useState<any[]>([])
 
     const session = useSession();
     const router = useRouter();
 
-    const handleSaveBio = () => {
-        setUserData({ ...userData, bio: bioText })
-        setIsEditingBio(false)
+    const handleSaveBio = async () => {
+        try {
+            // Send API request to update bio
+            await axios.post("/api/addBio", {
+                bio: bioDraft
+            });
+            
+            // Update local state
+            setUser((prev: any) => (prev ? { ...prev, bio: bioDraft } : prev))
+            setIsEditingBio(false)
+        } catch (error) {
+            console.error("Error updating bio:", error);
+            // You might want to show an error message to the user here
+        }
     }
 
     const handleCancelEdit = () => {
-        setBioText(userData.bio)
+        setBioDraft(user?.bio ?? "")
         setIsEditingBio(false)
     }
 
@@ -120,15 +74,17 @@ export default function ProfilePage() {
 
     useEffect(() => {
         async function getUserInfo() {
-            const response = await axios.get("/api/getUser");
-            const user = response.data;
-            setBio(user.bio);
-            setNotifications(user.notifications);
-            setAnswersByUser(user.answers);
-            setQuestionsByUser(user.questions);
-
-            console.log(user.questions);
-            
+            try {
+                const response = await axios.get("/api/getUser");
+                const u = response.data;
+                setUser(u);
+                setBioDraft(u?.bio ?? "");
+                setPosts(Array.isArray(u?.posts) ? u.posts : []);
+                setComments(Array.isArray(u?.comments) ? u.comments : []);
+                setNotifications([]);
+            } catch (error) {
+                console.error(error);
+            }
         }
         getUserInfo()
     }, [])
@@ -140,7 +96,7 @@ export default function ProfilePage() {
                     {/* Header */}
                     <Header
                         session={session}
-                        notificationCount={notificationCount}
+                        notificationCount={notifications.length}
                         onSignOut={() => { signOut({ callbackUrl: "/home" }) }}
                     />
 
@@ -177,8 +133,8 @@ export default function ProfilePage() {
                                                     {isEditingBio ? (
                                                         <div className="space-y-2">
                                                             <Textarea
-                                                                value={bioText}
-                                                                onChange={(e) => setBioText(e.target.value)}
+                                                                value={bioDraft}
+                                                                onChange={(e) => setBioDraft(e.target.value)}
                                                                 placeholder="Tell us about yourself..."
                                                                 className="min-h-[100px] bg-white text-black border-gray-300"
                                                             />
@@ -204,7 +160,7 @@ export default function ProfilePage() {
                                                         </div>
                                                     ) : (
                                                         <p className="text-gray-700 text-sm text-left">
-                                                            {userData.bio || "No bio added yet. Click edit to add your bio."}
+                                                            {user?.bio || "No bio added yet. Click edit to add your bio."}
                                                         </p>
                                                     )}
                                                 </div>
@@ -212,7 +168,7 @@ export default function ProfilePage() {
                                                 <div className="w-full space-y-2 text-sm">
                                                     <div className="flex justify-between">
                                                         <span className="text-gray-600">Joined:</span>
-                                                        <span className="text-black font-medium">{userData.joinedDate}</span>
+                                                        <span className="text-black font-medium">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "long" }) : ""}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -227,12 +183,12 @@ export default function ProfilePage() {
                                         <CardContent className="bg-white">
                                             <div className="grid grid-cols-2 gap-4 text-center">
                                                 <div className="p-3 bg-blue-50 rounded-lg">
-                                                    <div className="text-2xl font-bold text-blue-600">{userData.questionsAsked}</div>
-                                                    <div className="text-sm text-gray-600">Questions</div>
+                                                    <div className="text-2xl font-bold text-blue-600">{posts.length}</div>
+                                                    <div className="text-sm text-gray-600">Posts</div>
                                                 </div>
                                                 <div className="p-3 bg-green-50 rounded-lg">
-                                                    <div className="text-2xl font-bold text-green-600">{userData.answersGiven}</div>
-                                                    <div className="text-sm text-gray-600">Answers</div>
+                                                    <div className="text-2xl font-bold text-green-600">{comments.length}</div>
+                                                    <div className="text-sm text-gray-600">Comments</div>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -241,28 +197,22 @@ export default function ProfilePage() {
 
                                 {/* Activity Feed */}
                                 <div className="lg:col-span-2">
-                                    {/* Recent Questions */}
+                                    {/* Recent Posts */}
                                     <Card className="bg-white mb-6">
                                         <CardHeader className="bg-white">
-                                            <CardTitle className="text-black">Recent Questions</CardTitle>
+                                            <CardTitle className="text-black">Recent Posts</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white">
                                             <div className="space-y-4">
-                                                {questionsByUser.map((question: any) => (
-                                                    <div key={question.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                                                        <Link href={`/question/${question.id}`}>
+                                                {posts.map((post: any) => (
+                                                    <div key={post.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                                                        <Link href={`/post/${post.slug}`}>
                                                             <h3 className="text-lg font-medium text-black hover:text-blue-600 cursor-pointer mb-2">
-                                                                {question.title}
+                                                                {post.title}
                                                             </h3>
                                                         </Link>
                                                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                            <span className="flex items-center gap-1">
-                                                                <span className="text-blue-600 font-medium">{question.votes}</span> votes
-                                                            </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <span className="text-green-600 font-medium">{question.answers}</span> answers
-                                                            </span>
-                                                            <span>{question.timeAgo}</span>
+                                                            <span>{post.createdAt ? new Date(post.createdAt).toLocaleString() : ""}</span>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -270,26 +220,18 @@ export default function ProfilePage() {
                                         </CardContent>
                                     </Card>
 
-                                    {/* Recent Answers */}
+                                    {/* Recent Comments */}
                                     <Card className="bg-white">
                                         <CardHeader className="bg-white">
-                                            <CardTitle className="text-black">Recent Answers</CardTitle>
+                                            <CardTitle className="text-black">Recent Comments</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white">
                                             <div className="space-y-4">
-                                                {mockRecentAnswers.map((answer) => (
-                                                    <div key={answer.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                                                        <Link href={`/question/${answer.id}`}>
-                                                            <h3 className="text-lg font-medium text-black hover:text-blue-600 cursor-pointer mb-2">
-                                                                {answer.questionTitle}
-                                                            </h3>
-                                                        </Link>
+                                                {comments.map((comment: any) => (
+                                                    <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                                                        <p className="text-sm text-gray-700 mb-2">{comment.content}</p>
                                                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                            <span className="flex items-center gap-1">
-                                                                <span className="text-blue-600 font-medium">{answer.votes}</span> votes
-                                                            </span>
-                                                            {answer.isAccepted && <Badge className="bg-green-500 text-white text-xs">✓ Accepted</Badge>}
-                                                            <span>{answer.timeAgo}</span>
+                                                            <span>{comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ""}</span>
                                                         </div>
                                                     </div>
                                                 ))}
