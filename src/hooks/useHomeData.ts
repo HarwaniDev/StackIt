@@ -29,14 +29,17 @@ export function useHomeData() {
     const [totalPosts, setTotalPosts] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
 
     const fetchAllData = useCallback(async () => {
         try {
             setLoading(true)
             setError(null)
-            
+
             const [postsResponse, notificationsResponse, tagsResponse] = await Promise.all([
-                axios.get("/api/getAllPosts"),
+                axios.post("/api/getAllPosts", {
+                    page: currentPage
+                }),
                 axios.get("/api/getNotifications"),
                 axios.get("/api/getTags")
             ])
@@ -52,7 +55,7 @@ export function useHomeData() {
         } finally {
             setLoading(false)
         }
-    }, [])
+    }, [currentPage])
 
     const deleteNotifications = useCallback(async () => {
         try {
@@ -65,13 +68,13 @@ export function useHomeData() {
     }, [])
 
     const sortByUnCommented = useCallback(() => {
-        setPosts(prevPosts => 
+        setPosts(prevPosts =>
             [...prevPosts].sort((a, b) => a.commentsCount - b.commentsCount)
         )
     }, [])
 
     const sortByNewest = useCallback(() => {
-        setPosts(prevPosts => 
+        setPosts(prevPosts =>
             [...prevPosts].sort((a, b) => {
                 const [dayA, monthA, yearA] = a.createdAt.split('/').map(Number);
                 const [dayB, monthB, yearB] = b.createdAt.split('/').map(Number);
@@ -96,6 +99,8 @@ export function useHomeData() {
         totalPosts,
         loading,
         error,
+        currentPage, 
+        setCurrentPage,
         deleteNotifications,
         sortByUnCommented,
         sortByNewest,
