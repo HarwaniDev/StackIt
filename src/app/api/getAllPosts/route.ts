@@ -1,12 +1,20 @@
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const GET = async () => {
+export const POST = async (req: NextRequest) => {
     const session = await auth();
     if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    let body;
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const { page } = body;
 
     try {
         const [posts, totalPosts] = await Promise.all([
@@ -31,7 +39,9 @@ export const GET = async () => {
                             _count: true
                         }
                     }
-                }
+                },
+                skip: (page - 1) * 10,
+                take: 10
             }),
             db.post.count()
         ]);
