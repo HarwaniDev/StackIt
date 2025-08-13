@@ -18,7 +18,6 @@ import { ErrorMessage, SkeletonPostList } from "@/components/LoadingStates"
 export default function HomePage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [filter, setFilter] = useState("newest")
-    const [currentPage, setCurrentPage] = useState(1)
     const session = useSession();
     const router = useRouter();
 
@@ -30,6 +29,8 @@ export default function HomePage() {
         totalPosts,
         loading,
         error,
+        currentPage, 
+        setCurrentPage,
         deleteNotifications,
         sortByUnCommented,
         sortByNewest,
