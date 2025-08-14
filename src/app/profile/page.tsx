@@ -14,10 +14,6 @@ import axios from "axios"
 
 // Using real user data from /api/getUser
 
- 
-
- 
-
 export default function ProfilePage() {
     const [user, setUser] = useState<any>(null)
     const [isEditingBio, setIsEditingBio] = useState(false)

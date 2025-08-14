@@ -1,29 +1,42 @@
-# Create T3 App
+# StackIt - Interview Experience Platform
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+StackIt is a community-driven platform where developers can share and discover real interview experiences. Built with transparency and collaboration in mind, StackIt helps developers prepare better for technical interviews by providing authentic insights from those who've been through the process.
 
-## What's next? How do I make an app with this?
+## 🎯 What is StackIt?
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+StackIt is a modern web application that serves as a knowledge-sharing platform for the developer community. It allows users to:
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+- **Share Interview Experiences**: Post detailed accounts of technical interviews, including questions asked, interview rounds, and valuable tips
+- **Discover Real Stories**: Search and browse interview experiences by company, role, or technology stack
+- **Build Community**: Connect with other developers, comment on experiences, and learn from collective wisdom
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
 
-## Learn More
+The platform emphasizes authenticity and transparency, helping developers understand what to expect in real-world interview scenarios rather than relying on generic preparation materials.
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## 🚀 Features
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
 
-## How do I deploy this?
+### User Experience
+- **Responsive Design**: Optimized for desktop and mobile devices
+- **Modern UI**: Clean, intuitive interface built with Tailwind CSS and Radix UI
+- **Search & Filter**: Find relevant interview experiences quickly
+- **Rich Text Editing**: Create detailed posts with formatting options
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## 🛠 Technology Stack
+
+### Frontend
+- **Next.js 15** - React framework with App Router for server-side rendering and routing
+- **TypeScript** - Type-safe JavaScript for better development experience
+- **Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+- **Radix UI** - Accessible, unstyled UI components
+- **Lucide React** - Beautiful, customizable icons
+
+### Backend & Database
+- **Next.js API Routes** - Serverless API endpoints for backend functionality
+- **Prisma ORM** - Type-safe database client with PostgreSQL
+- **PostgreSQL** - Robust relational database for data persistence
+- **NextAuth.js** - Complete authentication solution with multiple providers
+
+
+**Made with ❤️ for developers by developers**
