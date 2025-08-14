@@ -15,7 +15,13 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { userId, commentId, voteType } = body;
+    const { commentId, voteType } = body;
+    const userId = session.user.id; // Use authenticated user's ID
+
+    // Validate required fields
+    if (!commentId || voteType === undefined) {
+        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
 
     try {
         const vote = await db.vote.findUnique({
@@ -27,7 +33,7 @@ export const POST = async (req: NextRequest) => {
             }
         });
 
-        if (voteType == "1" || voteType == "-1") {
+        if (voteType === 1 || voteType === -1) {
             await db.vote.upsert({
                 where: {
                     userId_commentId: {
@@ -44,16 +50,22 @@ export const POST = async (req: NextRequest) => {
                     value: voteType
                 }
             })
-        } else if (vote && voteType == "0") {
-            await db.vote.delete({
-                where: {
-                    userId_commentId: {
-                        userId: userId,
-                        commentId: commentId
+        } else if (voteType === 0) {
+            // Delete vote if it exists, otherwise do nothing
+            if (vote) {
+                await db.vote.delete({
+                    where: {
+                        userId_commentId: {
+                            userId: userId,
+                            commentId: commentId
+                        }
                     }
-                }
-            })
+                })
+            }
+        } else {
+            return NextResponse.json({ error: "Invalid vote type" }, { status: 400 });
         }
+        
         return NextResponse.json({ message: "vote operation successful" }, { status: 201 });
     } catch (error) {
         console.log(error);
