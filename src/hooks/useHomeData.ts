@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import axios from "axios"
+import { useSession } from "next-auth/react"
 
 interface Post {
     slug: string;
@@ -22,6 +23,7 @@ interface Tag {
 }
 
 export function useHomeData() {
+    const { data: session } = useSession()
     const [posts, setPosts] = useState<Post[]>([])
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [notificationCount, setNotificationCount] = useState(0)
@@ -36,28 +38,45 @@ export function useHomeData() {
             setLoading(true)
             setError(null)
 
-            const [postsResponse, notificationsResponse, tagsResponse] = await Promise.all([
+            // Always fetch posts and tags
+            const [postsResponse, tagsResponse] = await Promise.all([
                 axios.post("/api/getAllPosts", {
                     page: currentPage
                 }),
-                axios.get("/api/getNotifications"),
                 axios.get("/api/getTags")
             ])
 
             setPosts(postsResponse.data.postsResponse)
             setTotalPosts(postsResponse.data.totalPosts)
-            setNotifications(notificationsResponse.data)
-            setNotificationCount(notificationsResponse.data.length)
             setTags(tagsResponse.data)
+
+            // Only fetch notifications if user is logged in
+            if (session) {
+                try {
+                    const notificationsResponse = await axios.get("/api/getNotifications")
+                    setNotifications(notificationsResponse.data)
+                    setNotificationCount(notificationsResponse.data.length)
+                } catch (err) {
+                    console.error('Error loading notifications:', err)
+                    // Don't fail the entire request if notifications fail
+                    setNotifications([])
+                    setNotificationCount(0)
+                }
+            } else {
+                setNotifications([])
+                setNotificationCount(0)
+            }
         } catch (err) {
             console.error('Error loading data:', err)
             setError('Failed to load data')
         } finally {
             setLoading(false)
         }
-    }, [currentPage])
+    }, [currentPage, session])
 
     const deleteNotifications = useCallback(async () => {
+        if (!session) return
+        
         try {
             await axios.get("/api/deleteNotifications")
             setNotifications([])
@@ -65,7 +84,7 @@ export function useHomeData() {
         } catch (err) {
             console.error('Error deleting notifications:', err)
         }
-    }, [])
+    }, [session])
 
     const sortByUnCommented = useCallback(() => {
         setPosts(prevPosts =>

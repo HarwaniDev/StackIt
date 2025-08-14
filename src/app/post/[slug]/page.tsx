@@ -10,7 +10,7 @@ import { ChevronUp, ChevronDown, Bell, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import RichTextEditor from "@/components/rich-text-editor"
 import Header from "@/components/Header";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import axios from "axios"
 import { renderPreview } from "@/components/ui/render"
 import { Pagination } from "@/components/ui/pagination"
@@ -48,7 +48,6 @@ export default function PostDetailPage() {
       // Remove vote if clicking the same vote
       setUserVotes((prev) => ({ ...prev, [commentId]: null }))
       await axios.post("/api/handleVote", {
-        userId: session.data?.user.id,
         commentId: commentId,
         voteType: 0
       })
@@ -56,7 +55,6 @@ export default function PostDetailPage() {
       // Set new vote
       setUserVotes((prev) => ({ ...prev, [commentId]: voteType }))
       await axios.post("/api/handleVote", {
-        userId: session.data?.user.id,
         commentId: commentId,
         voteType: voteType === "up" ? 1 : -1
       })
@@ -198,7 +196,8 @@ export default function PostDetailPage() {
             setNotifications([]);
             setNotificationCount(0);
           }}
-          onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
+          // onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
+          onSignOut={() =>  signOut({callbackUrl: "/home"})}
         />
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-4xl mx-auto">
@@ -217,17 +216,18 @@ export default function PostDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <Header
-        session={session}
-        notificationCount={notificationCount}
-        notifications={notifications}
-        onClearNotifications={() => {
-          handleDeleteNotifications();
-          setNotifications([]);
-          setNotificationCount(0);
-        }}
-        onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
-      />
+              <Header
+          session={session}
+          notificationCount={notificationCount}
+          notifications={notifications}
+          onClearNotifications={() => {
+            handleDeleteNotifications();
+            setNotifications([]);
+            setNotificationCount(0);
+          }}
+          // onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
+          onSignOut={() => signOut({callbackUrl: "/home"})}
+        />
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
 

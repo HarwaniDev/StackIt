@@ -28,14 +28,9 @@ export default function AddPostPage() {
   const session = useSession();
   const router = useRouter();
 
-  // Redirect unauthenticated users
+  // Fetch notifications for authenticated users
   useEffect(() => {
-    if (session.status === "unauthenticated") {
-      const timeout = setTimeout(() => {
-        router.push("/api/auth/signin?callbackUrl=/ask");
-      }, 2000);
-      return () => clearTimeout(timeout);
-    } else {
+    if (session.status === "authenticated") {
       async function getNotificationData() {
         const response = await axios.get("/api/getNotifications");
         setNotifications(response.data);
@@ -44,19 +39,7 @@ export default function AddPostPage() {
 
       getNotificationData();
     }
-  }, [session.status, router]);
-
-  if (session.status === "unauthenticated") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-8 py-6 rounded shadow text-center">
-          <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-          <p className="mb-2">You must be logged in to access this page.</p>
-          <p>Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [session.status]);
 
   const addTag = (tag: string) => {
     if (tag.trim() && !tags.includes(tag.trim())) {
