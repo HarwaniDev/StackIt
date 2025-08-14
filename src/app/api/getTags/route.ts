@@ -3,10 +3,10 @@ import { db } from "@/server/db";
 import { NextResponse } from "next/server";
 
 export const GET = async () => {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await auth();
+    // if (!session?.user?.id) {
+    //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     try {
         const postTags = await db.postTag.groupBy({
