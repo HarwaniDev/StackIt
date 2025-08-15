@@ -103,7 +103,7 @@ export default function AddPostPage() {
         session={session}
         notificationCount={notificationCount}
         notifications={notifications}
-        onSignOut={() => { void signOut({ callbackUrl: "http://localhost:3000/home" }); }}
+        onSignOut={() => { void signOut({ callbackUrl: "https://stackit-theta.vercel.app/home" }); }}
       />
 
       <div className="container mx-auto px-4 py-6">

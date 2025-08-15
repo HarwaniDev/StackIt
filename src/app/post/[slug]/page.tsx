@@ -223,7 +223,7 @@ export default function PostDetailPage() {
             setNotificationCount(0);
           }}
           // onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
-          onSignOut={() => { void signOut({callbackUrl: "/home"}); }}
+          onSignOut={() => { void signOut({callbackUrl: "https://stackit-theta.vercel.app/home"}); }}
         />
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-4xl mx-auto">

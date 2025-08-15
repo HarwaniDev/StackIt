@@ -45,7 +45,7 @@ export default function HomePage() {
                 notificationCount={notificationCount}
                 notifications={notifications}
                 onClearNotifications={deleteNotifications}
-                onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/home" })}
+                onSignIn={() => signIn("google", { callbackUrl: "https://stackit-theta.vercel.app/home" })}
                 onSignOut={() => signOut({callbackUrl: "/home"})}
             />
 
@@ -88,7 +88,7 @@ export default function HomePage() {
                                 </Select>
                                 <Button className="bg-black text-white hover:bg-black/90 cursor-pointer" onClick={async () => {
                                     if (session.status === "unauthenticated") {
-                                        await signIn("google", { callbackUrl: "http://localhost:3000/ask" });
+                                        await signIn("google", { callbackUrl: "https://stackit-theta.vercel.app/ask" });
                                     } else {
                                         router.push("/ask");
                                     }

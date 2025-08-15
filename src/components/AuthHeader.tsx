@@ -24,9 +24,9 @@ export default function AuthHeader() {
                 className="text-black hover:bg-gray-100 cursor-pointer" 
                 onClick={() => {
                   if (!session.data?.user) {
-                    void signIn("google", { callbackUrl: "http://localhost:3000/home" });
+                    void signIn("google", { callbackUrl: "https://stackit-theta.vercel.app/home" });
                   } else {
-                    void signOut({ callbackUrl: "http://localhost:3000" });
+                    void signOut({ callbackUrl: "https://stackit-theta.vercel.app/" });
                   }
                 }}
               >
