@@ -2,14 +2,18 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { NextRequest, NextResponse } from "next/server";
 
+interface RequestBody {
+    page: number;
+}
+
 export const POST = async (req: NextRequest) => {
     // const session = await auth();
     // if (!session?.user?.id) {
     //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     // }
-    let body;
+    let body: RequestBody;
     try {
-        body = await req.json();
+        body = await req.json() as RequestBody;
     } catch {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }

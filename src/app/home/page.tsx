@@ -86,8 +86,12 @@ export default function HomePage() {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button className="bg-black text-white hover:bg-black/90 cursor-pointer" onClick={() => {
-                                    session.status === "unauthenticated" ? signIn("google", { callbackUrl: "http://localhost:3000/ask" }) : router.push("/ask");
+                                <Button className="bg-black text-white hover:bg-black/90 cursor-pointer" onClick={async () => {
+                                    if (session.status === "unauthenticated") {
+                                        await signIn("google", { callbackUrl: "http://localhost:3000/ask" });
+                                    } else {
+                                        router.push("/ask");
+                                    }
                                 }}>
                                     Share Interview Experience
                                 </Button>

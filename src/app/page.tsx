@@ -97,7 +97,7 @@ export default function LandingPage() {
             <div className="space-y-4">
               <h2 className="text-4xl font-extrabold text-black tracking-tight">Why StackIt Matters</h2>
               <p className="text-lg text-gray-600 leading-relaxed">
-                Interview preparation shouldn't be a guessing game. By sharing real experiences, we create a transparent community where developers can learn from each other's journeys, understand what to expect, and approach interviews with confidence.
+                Interview preparation shouldn&apos;t be a guessing game. By sharing real experiences, we create a transparent community where developers can learn from each other&apos;s journeys, understand what to expect, and approach interviews with confidence.
               </p>
             </div>
 
@@ -115,7 +115,7 @@ export default function LandingPage() {
                   <Trophy className="h-8 w-8 text-black" />
                 </div>
                 <h3 className="text-xl font-semibold text-black">Better Preparation</h3>
-                <p className="text-gray-600">Learn from others' experiences to prepare more effectively for your interviews.</p>
+                <p className="text-gray-600">Learn from others&apos; experiences to prepare more effectively for your interviews.</p>
               </div>
 
               <div className="space-y-3">

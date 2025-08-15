@@ -2,15 +2,21 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { NextResponse } from "next/server";
 
+interface RequestBody {
+    title: string;
+    description: string;
+    tags: string[];
+}
+
 export const POST = async (req: Request) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body;
+  let body: RequestBody;
   try {
-    body = await req.json();
+    body = await req.json() as RequestBody;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }

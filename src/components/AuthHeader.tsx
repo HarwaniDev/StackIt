@@ -23,9 +23,11 @@ export default function AuthHeader() {
                 variant="ghost" 
                 className="text-black hover:bg-gray-100 cursor-pointer" 
                 onClick={() => {
-                  !session.data?.user 
-                    ? signIn("google", { callbackUrl: "http://localhost:3000/home" }) 
-                    : signOut({ callbackUrl: "http://localhost:3000" })
+                  if (!session.data?.user) {
+                    void signIn("google", { callbackUrl: "http://localhost:3000/home" });
+                  } else {
+                    void signOut({ callbackUrl: "http://localhost:3000" });
+                  }
                 }}
               >
                 {!session.data?.user ? "Sign In" : "Sign Out"}

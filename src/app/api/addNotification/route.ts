@@ -1,6 +1,13 @@
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { NextResponse, type NextRequest } from "next/server";
+import { NotificationType } from "@prisma/client";
+
+interface RequestBody {
+    userId: string;
+    type: NotificationType;
+    postId: string;
+}
 
 export const POST = async (req: NextRequest) => {
     const session = await auth();
@@ -8,9 +15,9 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let body;
+    let body: RequestBody;
     try {
-        body = await req.json();
+        body = await req.json() as RequestBody;
     } catch (error) {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
@@ -35,7 +42,7 @@ export const POST = async (req: NextRequest) => {
                 userId: userId,
                 postId: postId,
                 type: type,
-                message: message!
+                message: message ?? ""
             }
         });
         const response = {

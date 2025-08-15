@@ -107,7 +107,7 @@ export function useHomeData() {
     }, [])
 
     useEffect(() => {
-        fetchAllData()
+        void fetchAllData()
     }, [fetchAllData])
 
     return {

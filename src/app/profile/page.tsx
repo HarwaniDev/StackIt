@@ -12,15 +12,37 @@ import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
+// TypeScript interfaces for type safety
+interface Post {
+    id: string;
+    slug: string;
+    title: string;
+    createdAt: string;
+}
+
+interface Comment {
+    id: string;
+    content: string;
+    createdAt: string;
+}
+
+interface User {
+    id: string;
+    bio?: string;
+    createdAt: string;
+    posts: Post[];
+    comments: Comment[];
+}
+
 // Using real user data from /api/getUser
 
 export default function ProfilePage() {
-    const [user, setUser] = useState<any>(null)
+    const [user, setUser] = useState<User | null>(null)
     const [isEditingBio, setIsEditingBio] = useState(false)
     const [bioDraft, setBioDraft] = useState("")
-    const [posts, setPosts] = useState<any[]>([])
-    const [comments, setComments] = useState<any[]>([])
-    const [notifications, setNotifications] = useState<any[]>([])
+    const [posts, setPosts] = useState<Post[]>([])
+    const [comments, setComments] = useState<Comment[]>([])
+    const [notifications, setNotifications] = useState<unknown[]>([])
 
     const session = useSession();
     const router = useRouter();
@@ -33,7 +55,7 @@ export default function ProfilePage() {
             });
             
             // Update local state
-            setUser((prev: any) => (prev ? { ...prev, bio: bioDraft } : prev))
+            setUser((prev: User | null) => (prev ? { ...prev, bio: bioDraft } : prev))
             setIsEditingBio(false)
         } catch (error) {
             console.error("Error updating bio:", error);
@@ -46,23 +68,51 @@ export default function ProfilePage() {
         setIsEditingBio(false)
     }
 
+    // Type guard functions
+    const isPost = (obj: unknown): obj is Post => {
+        return obj !== null && 
+               typeof obj === 'object' && 
+               'id' in obj && 
+               'slug' in obj && 
+               'title' in obj && 
+               'createdAt' in obj;
+    }
 
+    const isComment = (obj: unknown): obj is Comment => {
+        return obj !== null && 
+               typeof obj === 'object' && 
+               'id' in obj && 
+               'content' in obj && 
+               'createdAt' in obj;
+    }
+
+    const isUser = (obj: unknown): obj is User => {
+        return obj !== null && 
+               typeof obj === 'object' && 
+               'id' in obj && 
+               'createdAt' in obj;
+    }
 
     useEffect(() => {
         async function getUserInfo() {
             try {
                 const response = await axios.get("/api/getUser");
                 const u = response.data;
-                setUser(u);
-                setBioDraft(u?.bio ?? "");
-                setPosts(Array.isArray(u?.posts) ? u.posts : []);
-                setComments(Array.isArray(u?.comments) ? u.comments : []);
+                
+                if (isUser(u)) {
+                    setUser(u);
+                    setBioDraft(u.bio ?? "");
+                    setPosts(Array.isArray(u.posts) ? u.posts.filter(isPost) : []);
+                    setComments(Array.isArray(u.comments) ? u.comments.filter(isComment) : []);
+                } else {
+                    console.error("Invalid user data received");
+                }
                 setNotifications([]);
             } catch (error) {
                 console.error(error);
             }
         }
-        getUserInfo()
+        void getUserInfo()
     }, [])
 
     return (
@@ -73,7 +123,7 @@ export default function ProfilePage() {
                     <Header
                         session={session}
                         notificationCount={notifications.length}
-                        onSignOut={() => { signOut({ callbackUrl: "/home" }) }}
+                        onSignOut={() => { void signOut({ callbackUrl: "/home" }); }}
                     />
 
                     <div className="container mx-auto px-4 py-6">
@@ -136,7 +186,7 @@ export default function ProfilePage() {
                                                         </div>
                                                     ) : (
                                                         <p className="text-gray-700 text-sm text-left">
-                                                            {user?.bio || "No bio added yet. Click edit to add your bio."}
+                                                            {user?.bio ?? "No bio added yet. Click edit to add your bio."}
                                                         </p>
                                                     )}
                                                 </div>
@@ -180,7 +230,7 @@ export default function ProfilePage() {
                                         </CardHeader>
                                         <CardContent className="bg-white">
                                             <div className="space-y-4">
-                                                {posts.map((post: any) => (
+                                                {posts.map((post: Post) => (
                                                     <div key={post.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                                                         <Link href={`/post/${post.slug}`}>
                                                             <h3 className="text-lg font-medium text-black hover:text-blue-600 cursor-pointer mb-2">
@@ -203,7 +253,7 @@ export default function ProfilePage() {
                                         </CardHeader>
                                         <CardContent className="bg-white">
                                             <div className="space-y-4">
-                                                {comments.map((comment: any) => (
+                                                {comments.map((comment: Comment) => (
                                                     <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                                                         <p className="text-sm text-gray-700 mb-2">{comment.content}</p>
                                                         <div className="flex items-center gap-4 text-sm text-gray-600">

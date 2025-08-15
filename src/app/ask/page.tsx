@@ -14,16 +14,25 @@ import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
+// Define types for API responses
+interface Notification {
+  message: string;
+  createdAt: string;
+  slug: string;
+}
+
+interface PostResponse {
+  authorId: string;
+  id: string;
+  slug: string;
+}
+
 export default function AddPostPage() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
-  const [notifications, setNotifications] = useState<{
-    message: string;
-    createdAt: string;
-    slug: string;
-  }[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationCount, setNotificationCount] = useState(0)
   const session = useSession();
   const router = useRouter();
@@ -32,12 +41,16 @@ export default function AddPostPage() {
   useEffect(() => {
     if (session.status === "authenticated") {
       async function getNotificationData() {
-        const response = await axios.get("/api/getNotifications");
-        setNotifications(response.data);
-        setNotificationCount(response.data.length);
+        try {
+          const response = await axios.get<Notification[]>("/api/getNotifications");
+          setNotifications(response.data);
+          setNotificationCount(response.data.length);
+        } catch (error) {
+          console.error("Failed to fetch notifications:", error);
+        }
       }
 
-      getNotificationData();
+      void getNotificationData();
     }
   }, [session.status]);
 
@@ -62,19 +75,23 @@ export default function AddPostPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await axios.post("/api/addPost", {
-      title,
-      description,
-      tags
-    });
-    const post = response.data;
+    try {
+      const response = await axios.post<PostResponse>("/api/addPost", {
+        title,
+        description,
+        tags
+      });
+      const post = response.data;
 
-    await axios.post("/api/addNotification", {
-      userId: post.authorId,
-      postId: post.id,
-      type: "POST_CREATED"
-    })
-    router.push(`/post/${post.slug}`);
+      await axios.post("/api/addNotification", {
+        userId: post.authorId,
+        postId: post.id,
+        type: "POST_CREATED"
+      });
+      router.push(`/post/${post.slug}`);
+    } catch (error) {
+      console.error("Failed to submit post:", error);
+    }
   }
 
   return (
@@ -86,7 +103,7 @@ export default function AddPostPage() {
         session={session}
         notificationCount={notificationCount}
         notifications={notifications}
-        onSignOut={() => { signOut({ callbackUrl: "http://localhost:3000/home" }) }}
+        onSignOut={() => { void signOut({ callbackUrl: "http://localhost:3000/home" }); }}
       />
 
       <div className="container mx-auto px-4 py-6">
@@ -135,7 +152,7 @@ export default function AddPostPage() {
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleTagInputKeyDown}
-                      onBlur={() => addTag(tagInput)}
+                      onBlur={() => { void addTag(tagInput); }}
                     />
                     {tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">

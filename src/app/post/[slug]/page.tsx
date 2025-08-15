@@ -14,6 +14,33 @@ import axios from "axios"
 import { renderPreview } from "@/components/ui/render"
 import { Pagination } from "@/components/ui/pagination"
 
+// TypeScript interfaces for type safety
+interface Comment {
+  id: string;
+  content: string;
+  authorName: string;
+  authorId: string;
+  createdAt: string;
+  votes: number;
+}
+
+interface Post {
+  postId: string;
+  title: string;
+  description: string;
+  name: string;
+  postAuthorId: string;
+  createdAt: string;
+  tagsInPost: string[];
+  comments: Comment[];
+  totalComments: number;
+}
+
+interface Vote {
+  commentId: string;
+  value: number;
+}
+
 export default function PostDetailPage() {
 
   const { slug } = useParams();
@@ -22,14 +49,14 @@ export default function PostDetailPage() {
   const [commentContent, setCommentContent] = useState("")
   const [notificationCount, setNotificationCount] = useState(0);
   const [userVotes, setUserVotes] = useState<{ [key: string]: "up" | "down" | null }>({})
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [postTitle, setPostTitle] = useState("");
   const [postContent, setPostContent] = useState("");
   const [postId, setPostId] = useState("");
   const [postAuthor, setPostAuthor] = useState("");
   const [postAuthorId, setPostAuthorId] = useState("");
   const [createdAt, setCreatedAt] = useState("");
-  const [postTags, setPostTags] = useState([]);
+  const [postTags, setPostTags] = useState<string[]>([]);
   const [voteCount, setVoteCount] = useState<{ [key: string]: number }>({});
   const [page, setPage] = useState(1);
   const [totalComments, setTotalComments] = useState(0);
@@ -91,7 +118,7 @@ export default function PostDetailPage() {
       const currentUser = session.data?.user;
 
       // Create a new comment object with the same structure as the existing comments
-      const newComment = {
+      const newComment: Comment = {
         id: response.data.id,
         createdAt: new Date().toLocaleDateString(),
         content: commentContent,
@@ -113,7 +140,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     async function getPost() {
       try {
-        const response = await axios.post("/api/getPost", {
+        const response = await axios.post<Post>("/api/getPost", {
           slug: slug,
           page: page
         });
@@ -127,7 +154,7 @@ export default function PostDetailPage() {
         setPostAuthorId(response.data.postAuthorId);
         setTotalComments(response.data.totalComments);
 
-        const voteCounts = response.data.comments.reduce((acc: any, comment: any) => {
+        const voteCounts = response.data.comments.reduce((acc: { [key: string]: number }, comment: Comment) => {
           acc[comment.id] = comment.votes;
           return acc;
         }, {});
@@ -140,12 +167,12 @@ export default function PostDetailPage() {
 
     async function getVotesData() {
       try {
-        const response = await axios.post("/api/checkVotes", {
+        const response = await axios.post<{ commentIds: Vote[] }>("/api/checkVotes", {
           slug
         });
 
-        response.data.commentIds.map((vote: any) => {
-          let voteType: string;
+        response.data.commentIds.map((vote: Vote) => {
+          let voteType: "up" | "down";
           if (vote.value === 1) {
             voteType = "up"
           } else {
@@ -196,7 +223,7 @@ export default function PostDetailPage() {
             setNotificationCount(0);
           }}
           // onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
-          onSignOut={() =>  signOut({callbackUrl: "/home"})}
+          onSignOut={() => { void signOut({callbackUrl: "/home"}); }}
         />
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-4xl mx-auto">
@@ -225,7 +252,7 @@ export default function PostDetailPage() {
             setNotificationCount(0);
           }}
           // onSignIn={() => signIn("google", { callbackUrl: "http://localhost:3000/post/1" })}
-          onSignOut={() => signOut({callbackUrl: "/home"})}
+          onSignOut={() => { void signOut({callbackUrl: "/home"}); }}
         />
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
@@ -271,7 +298,7 @@ export default function PostDetailPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleVote(comment.id, "up")}
+                          onClick={() => { void handleVote(comment.id, "up"); }}
                           className={`hover:bg-green-100 ${userVotes[comment.id] === "up" ? "text-green-600 bg-green-100" : "text-gray-500"}`}
                         >
                           <ChevronUp className="h-5 w-5" />
@@ -282,7 +309,7 @@ export default function PostDetailPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleVote(comment.id, "down")}
+                          onClick={() => { void handleVote(comment.id, "down"); }}
                           className={`hover:bg-red-100 ${userVotes[comment.id] === "down" ? "text-red-600 bg-red-100" : "text-gray-500"}`}
                         >
                           <ChevronDown className="h-5 w-5" />
