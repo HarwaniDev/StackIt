@@ -88,7 +88,7 @@ export default function Header({ session, notificationCount = 0, notifications =
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white ">
                   <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black cursor-pointer">
-                    <Link href="/profile">Profile</Link>
+                    <Link href="http://localhost:3000/profile">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="bg-white hover:bg-gray-50 text-black cursor-pointer" onClick={onSignOut}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -103,4 +103,4 @@ export default function Header({ session, notificationCount = 0, notifications =
       </div>
     </header>
   );
-} 
+}
